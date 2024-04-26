@@ -4,7 +4,16 @@
 EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
-  m_Scenes: []
+  m_Scenes:
+  - enabled: 1
+    path: Assets/Scenes/PlayField.unity
+    guid: c850ee8c3b14cc8459e7e186857cf567
   m_configObjects:
+    com.unity.adaptiveperformance.google.android.provider_settings: {fileID: 11400000,
+      guid: cddeb1802ba8ffc4ab297f7ffdc3314d, type: 2}
+    com.unity.adaptiveperformance.loader_settings: {fileID: 11400000, guid: 22aeffe58316fd84a9f4043228824083,
+      type: 2}
+    com.unity.adaptiveperformance.samsung.android.provider_settings: {fileID: 11400000,
+      guid: 1e2de8c4dfe10e842996e45ead948039, type: 2}
     com.unity.adaptiveperformance.simulator.provider_settings: {fileID: 11400000,
       guid: b86bbd4fdcd0b0e49b717547efb905a5, type: 2}

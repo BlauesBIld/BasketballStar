@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -5,19 +6,35 @@ using UnityEngine.Serialization;
 
 public class PlayerController : MonoBehaviour
 {
+    public static PlayerController Instance { get; private set; }
+    
     private bool _isChargingThrow = true;
     private float _initialTouchPosition;
     private float? _firstSwipeDirection = null;
     private float _currentSwipeDistance = 0f;
-    private float _jumpForce = 5f;
-
+    private float _jumpForce = 8f;
+    
+    public float lowestThrowPowerThreshold = 10f;
+    
+    public delegate void OnCurrentSwipeDistanceChanged(float currentSwipeDistance);
+    public event OnCurrentSwipeDistanceChanged CurrentSwipeDistanceChanged;
+    
     private Rigidbody _rigidbody;
 
     public BallController ballController;
     public Transform positionAboveHead;
 
-    void Start()
+    private void Awake()
     {
+        if(Instance == null)
+        {
+            Instance = this;
+        }
+        else
+        {
+            Debug.LogWarning("Tried to create 2nd Player Instance. Deleting it instead.");
+            Destroy(gameObject);
+        }
     }
 
     void Update()
@@ -28,35 +45,39 @@ public class PlayerController : MonoBehaviour
 
     private void HandleSwipeUp()
     {
-        if (Input.touchCount > 0 && _isChargingThrow)
+        if (Input.touchCount > 0)
         {
-            if ((_firstSwipeDirection == null || _firstSwipeDirection > 0))
+            if (_isChargingThrow)
             {
-                if (Input.GetTouch(0).phase == TouchPhase.Began)
+                if ((_firstSwipeDirection == null || _firstSwipeDirection > 0))
                 {
-                    _initialTouchPosition = Input.GetTouch(0).position.y;
-                }
-                else if (Input.GetTouch(0).phase == TouchPhase.Moved)
-                {
-                    float swipeDistance = Input.GetTouch(0).position.y - _initialTouchPosition;
-                    if (swipeDistance > 0)
+                    if (Input.GetTouch(0).phase == TouchPhase.Began)
                     {
-                        if (_firstSwipeDirection == null)
-                        {
-                            _firstSwipeDirection = swipeDistance;
-                            ballController.StartThrowing();
-                            StartCoroutine(StopChargingAndCallJumpThrowAfterOneSecond());
-                        }
+                        _initialTouchPosition = Input.GetTouch(0).position.y;
                     }
-                    else if (swipeDistance < 0)
+                    else if (Input.GetTouch(0).phase == TouchPhase.Moved)
                     {
-                        if (_firstSwipeDirection == null)
+                        float swipeDistance = Input.GetTouch(0).position.y - _initialTouchPosition;
+                        if (swipeDistance > 0)
                         {
-                            _firstSwipeDirection = swipeDistance;
+                            if (_firstSwipeDirection == null)
+                            {
+                                _firstSwipeDirection = swipeDistance;
+                                ballController.StartThrowing();
+                                StartCoroutine(StopChargingAndCallJumpThrowAfterOneSecond());
+                            }
                         }
-                    }
+                        else if (swipeDistance < 0)
+                        {
+                            if (_firstSwipeDirection == null)
+                            {
+                                _firstSwipeDirection = swipeDistance;
+                            }
+                        }
 
-                    _currentSwipeDistance = Mathf.Max(swipeDistance, 0f);
+                        _currentSwipeDistance = Mathf.Max(swipeDistance, 0f);
+                        CurrentSwipeDistanceChanged?.Invoke(_currentSwipeDistance);
+                    }
                 }
             }
 
@@ -87,7 +108,17 @@ public class PlayerController : MonoBehaviour
             Debug.Log("current player velocity: " + _rigidbody.velocity.y);
             yield return null;
         }
+
         Throw();
+        StartCoroutine(ResetShot());
+    }
+
+    private IEnumerator ResetShot()
+    {
+        yield return new WaitForSeconds(3f);
+        CurrentSwipeDistanceChanged?.Invoke(0);
+        ballController.Reset();
+        _isChargingThrow = true;
     }
 
     private void Jump()
@@ -98,7 +129,8 @@ public class PlayerController : MonoBehaviour
 
     private void Throw()
     {
-        ballController.Throw(_currentSwipeDistance);
-        Debug.Log("Throw with power: " + _currentSwipeDistance);
+        float throwForce = _currentSwipeDistance/300 + lowestThrowPowerThreshold;
+        ballController.Throw(throwForce);
+        Debug.Log("Throw with power: " + throwForce);
     }
 }
