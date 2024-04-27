@@ -7,26 +7,29 @@ using UnityEngine.Serialization;
 public class PlayerController : MonoBehaviour
 {
     public static PlayerController Instance { get; private set; }
-    
+
     private bool _isChargingThrow = true;
     private float _initialTouchPosition;
     private float? _firstSwipeDirection = null;
     private float _currentSwipeDistance = 0f;
     private float _jumpForce = 8f;
-    
+    public float optimalThrowPower = 0f;
+    public float optimalAngleDeg = 0f;
+
     public float lowestThrowPowerThreshold = 10f;
-    
+
     public delegate void OnCurrentSwipeDistanceChanged(float currentSwipeDistance);
     public event OnCurrentSwipeDistanceChanged CurrentSwipeDistanceChanged;
-    
+
     private Rigidbody _rigidbody;
 
     public BallController ballController;
     public Transform positionAboveHead;
+    public Transform ringCenter;
 
     private void Awake()
     {
-        if(Instance == null)
+        if (Instance == null)
         {
             Instance = this;
         }
@@ -37,9 +40,14 @@ public class PlayerController : MonoBehaviour
         }
     }
 
-    void Update()
+    void Start()
     {
         _rigidbody = GetComponent<Rigidbody>();
+        CalculateOptimalThrowPower();
+    }
+
+    void Update()
+    {
         HandleSwipeUp();
     }
 
@@ -105,10 +113,8 @@ public class PlayerController : MonoBehaviour
     {
         while (_rigidbody.velocity.y >= 0)
         {
-            Debug.Log("current player velocity: " + _rigidbody.velocity.y);
             yield return null;
         }
-
         Throw();
         StartCoroutine(ResetShot());
     }
@@ -118,19 +124,50 @@ public class PlayerController : MonoBehaviour
         yield return new WaitForSeconds(3f);
         CurrentSwipeDistanceChanged?.Invoke(0);
         ballController.Reset();
+        CalculateOptimalThrowPower();
         _isChargingThrow = true;
     }
 
     private void Jump()
     {
-        _rigidbody.AddForce(Vector3.up * _jumpForce, ForceMode.Impulse);
+        _rigidbody.AddForce(Vector3.up * _jumpForce, ForceMode.VelocityChange);
         Debug.Log("Jump");
     }
 
     private void Throw()
     {
-        float throwForce = _currentSwipeDistance/300 + lowestThrowPowerThreshold;
+        float throwForce = _currentSwipeDistance / 300 + lowestThrowPowerThreshold;
         ballController.Throw(throwForce);
-        Debug.Log("Throw with power: " + throwForce);
     }
+
+    private void CalculateOptimalThrowPower()
+    {
+        Vector3 ballThrowPosition = positionAboveHead.position;
+        Debug.Log("Ball Position: " + ballThrowPosition);
+
+        Vector3 ringCenterPosition = ringCenter.position;
+        Debug.Log("Ring Center Position: " + ringCenterPosition);
+
+        float horizontalDistance = Vector3.Distance(new Vector3(ballThrowPosition.x, 0, ballThrowPosition.z), new Vector3(ringCenterPosition.x, 0, ringCenterPosition.z));
+        Debug.Log("Horizontal Distance: " + horizontalDistance);
+        float verticalDistance = ringCenterPosition.y - ballThrowPosition.y;
+        Debug.Log("Vertical Distance: " + verticalDistance);
+
+        Debug.Log("Gravity: " + Physics.gravity.magnitude);
+
+        float minimumAngleRad = 32f * Mathf.Deg2Rad;
+        float optimalAngle = Mathf.Atan(2 * verticalDistance / horizontalDistance + Mathf.Tan(minimumAngleRad));
+        Debug.Log("Result for Atan: " + 2 * verticalDistance / horizontalDistance + Mathf.Tan(minimumAngleRad));
+        float optimalAngleDegCalculated = optimalAngle * Mathf.Rad2Deg;
+        Debug.Log("Optimal Angle: " + optimalAngle + "/ " + optimalAngleDegCalculated + "°");
+        
+        Rigidbody ballRigidbody = ballController.GetComponent<Rigidbody>();
+        Debug.Log("Ball Mass: " + ballRigidbody.mass);
+        float optimalThrowPowerCalculated = Mathf.Sqrt((-Physics.gravity.magnitude * Mathf.Pow(horizontalDistance, 2)) / (2 * (verticalDistance - horizontalDistance * Mathf.Tan(optimalAngle)) * Mathf.Cos(Mathf.Cos(optimalAngle))));
+        Debug.Log("Optimal Throw Power: " + optimalThrowPowerCalculated);
+
+        optimalThrowPower = optimalThrowPowerCalculated;
+        optimalAngleDeg = optimalAngleDegCalculated;
+    }
+
 }

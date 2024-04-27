@@ -12,6 +12,11 @@ public enum BallStates
 
 public class BallController : MonoBehaviour
 {
+    public LineRenderer trajectoryLineRenderer;
+    public int resolution = 30; // Number of points in the trajectory line
+    public float simulationTime = 2f; // Time in seconds to simulate the trajectory
+
+    
     public PlayerController playerPrefab;
     private BallStates _ballState = BallStates.Dribbling;
 
@@ -26,6 +31,30 @@ public class BallController : MonoBehaviour
     {
         _rigidbody = GetComponent<Rigidbody>();
         SetPositionNextToPlayer();
+        DrawTrajectory();
+    }
+    
+    private void DrawTrajectory()
+    {
+        trajectoryLineRenderer = GetComponent<LineRenderer>();
+        Vector3[] trajectoryPoints = new Vector3[resolution];
+        trajectoryLineRenderer.positionCount = resolution;
+
+        Vector3 currentPosition = PlayerController.Instance.positionAboveHead.position;
+        
+        
+        float ratio = PlayerController.Instance.optimalAngleDeg / 90f;
+        Vector3 currentVelocity = (playerPrefab.transform.forward * (1 - ratio) + playerPrefab.transform.up * ratio) * PlayerController.Instance.optimalThrowPower;
+
+        float timeStep = simulationTime / resolution;
+        for (int i = 0; i < resolution; i++)
+        {
+            trajectoryPoints[i] = currentPosition;
+            currentVelocity += Physics.gravity * timeStep; // Update velocity based on gravity
+            currentPosition += currentVelocity * timeStep; // Update position based on velocity
+        }
+
+        trajectoryLineRenderer.SetPositions(trajectoryPoints);
     }
 
     private void SetPositionNextToPlayer()
@@ -50,7 +79,7 @@ public class BallController : MonoBehaviour
 
     private void HandlePositionAbovePlayer()
     {
-        transform.position = playerPrefab.positionAboveHead.position;
+        //transform.position = playerPrefab.positionAboveHead.position;
     }
 
     private void HandleIdleBouncing()
@@ -80,11 +109,12 @@ public class BallController : MonoBehaviour
     {
         float time = 0f;
         float duration = 1f;
+        Vector3 targetPosition = playerPrefab.positionAboveHead.position;
         while (time < duration)
         {
             time += Time.deltaTime;
             transform.position =
-                Vector3.Lerp(transform.position, playerPrefab.positionAboveHead.position, time / duration);
+                Vector3.Lerp(transform.position, targetPosition, time / duration);
             yield return null;
         }
     }
@@ -93,16 +123,18 @@ public class BallController : MonoBehaviour
     {
         _rigidbody.isKinematic = false;
         _ballState = BallStates.Flying;
-        float upForce = throwForce * 0.50f;
-        float forwardForce = throwForce * 0.50f;
-        _rigidbody.AddForce(playerPrefab.transform.up * upForce + playerPrefab.transform.forward * forwardForce,
-            ForceMode.Impulse);
-        _rigidbody.velocity *= 5f;
+        throwForce = PlayerController.Instance.optimalThrowPower;
+        float ratio = PlayerController.Instance.optimalAngleDeg / 90f;
+        Vector3 forceVector = playerPrefab.transform.forward * (1 - ratio) + playerPrefab.transform.up * ratio;
+        _rigidbody.AddForce(forceVector * throwForce, ForceMode.Impulse);
+        
+        Debug.Log("Throw with power: " + throwForce);
+        Debug.Log("Force Vector: " + forceVector);
         
         float torqueForce = throwForce * 14f;
         Vector3 torqueDirection = -playerPrefab.transform.right;
-
-        _rigidbody.AddTorque(torqueDirection * torqueForce, ForceMode.Impulse);
+        
+        //_rigidbody.AddTorque(torqueDirection * torqueForce, ForceMode.Impulse);
     }
 
     public void Reset()
