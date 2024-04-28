@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -12,56 +13,27 @@ public enum BallStates
 
 public class BallController : MonoBehaviour
 {
-    public LineRenderer trajectoryLineRenderer;
-    public int resolution = 30; // Number of points in the trajectory line
-    public float simulationTime = 2f; // Time in seconds to simulate the trajectory
-
-    
     public PlayerController playerPrefab;
     private BallStates _ballState = BallStates.Dribbling;
 
     public PhysicMaterial defaultMaterial;
     public PhysicMaterial noBounceMaterial;
-    
+
     private Rigidbody _rigidbody;
     private float _lastBallYVelocity = 0f;
-    private float _idleBounceForce = 5f;
+    private float _idleBounceForce = 10f;
 
     void Start()
     {
         _rigidbody = GetComponent<Rigidbody>();
         SetPositionNextToPlayer();
-        DrawTrajectory();
-    }
-    
-    private void DrawTrajectory()
-    {
-        trajectoryLineRenderer = GetComponent<LineRenderer>();
-        Vector3[] trajectoryPoints = new Vector3[resolution];
-        trajectoryLineRenderer.positionCount = resolution;
-
-        Vector3 currentPosition = PlayerController.Instance.positionAboveHead.position;
-        
-        
-        float ratio = PlayerController.Instance.optimalAngleDeg / 90f;
-        Vector3 currentVelocity = (playerPrefab.transform.forward * (1 - ratio) + playerPrefab.transform.up * ratio) * PlayerController.Instance.optimalThrowPower;
-
-        float timeStep = simulationTime / resolution;
-        for (int i = 0; i < resolution; i++)
-        {
-            trajectoryPoints[i] = currentPosition;
-            currentVelocity += Physics.gravity * timeStep; // Update velocity based on gravity
-            currentPosition += currentVelocity * timeStep; // Update position based on velocity
-        }
-
-        trajectoryLineRenderer.SetPositions(trajectoryPoints);
     }
 
     private void SetPositionNextToPlayer()
     {
-        Vector3 playerPosition = playerPrefab.transform.position;
-        Vector3 ballPosition = new Vector3(playerPosition.x + -0.25f, playerPosition.y, playerPosition.z + 1f);
-        transform.position = ballPosition;
+        Vector3 ballPositionNextToPlayer = playerPrefab.transform.position + playerPrefab.transform.forward * 0.25f +
+                                           playerPrefab.transform.right;
+        transform.position = ballPositionNextToPlayer;
     }
 
     void Update()
@@ -79,7 +51,7 @@ public class BallController : MonoBehaviour
 
     private void HandlePositionAbovePlayer()
     {
-        //transform.position = playerPrefab.positionAboveHead.position;
+        transform.position = playerPrefab.positionAboveHead.position;
     }
 
     private void HandleIdleBouncing()
@@ -119,22 +91,31 @@ public class BallController : MonoBehaviour
         }
     }
 
-    public void Throw(float throwForce)
+    public void Throw(float throwPower)
     {
         _rigidbody.isKinematic = false;
         _ballState = BallStates.Flying;
-        throwForce = PlayerController.Instance.optimalThrowPower;
-        float ratio = PlayerController.Instance.optimalAngleDeg / 90f;
-        Vector3 forceVector = playerPrefab.transform.forward * (1 - ratio) + playerPrefab.transform.up * ratio;
-        _rigidbody.AddForce(forceVector * throwForce, ForceMode.Impulse);
-        
-        Debug.Log("Throw with power: " + throwForce);
-        Debug.Log("Force Vector: " + forceVector);
-        
-        float torqueForce = throwForce * 14f;
+
+        if (throwPower < PlayerController.Instance.optimalPerfectShotThrowPower +
+            PlayerController.Instance.perfectShotThreshold &&
+            throwPower > PlayerController.Instance.optimalPerfectShotThrowPower -
+            PlayerController.Instance.perfectShotThreshold)
+        {
+            throwPower = PlayerController.Instance.optimalPerfectShotThrowPower;
+            Debug.Log("Perfect shot!");
+        }
+
+        float optimalAngle = PlayerController.Instance.optimalPerfectShotAngleRad;
+        Vector3 forceVector = playerPrefab.transform.forward * Mathf.Cos(optimalAngle) +
+                              playerPrefab.transform.up * Mathf.Sin(optimalAngle);
+        _rigidbody.AddForce(forceVector * throwPower, ForceMode.Impulse);
+
+        Debug.Log("Throw with power: " + throwPower);
+
+        float torqueForce = throwPower * 14f;
         Vector3 torqueDirection = -playerPrefab.transform.right;
-        
-        //_rigidbody.AddTorque(torqueDirection * torqueForce, ForceMode.Impulse);
+
+        _rigidbody.AddTorque(torqueDirection * torqueForce, ForceMode.Impulse);
     }
 
     public void Reset()
@@ -142,9 +123,10 @@ public class BallController : MonoBehaviour
         _ballState = BallStates.Dribbling;
         _rigidbody.velocity = Vector3.zero;
         _rigidbody.angularVelocity = Vector3.zero;
+        transform.rotation = Quaternion.identity;
         SetPositionNextToPlayer();
     }
-    
+
     public void OnTriggerEnter(Collider other)
     {
         if (other.gameObject.CompareTag("BasketRing"))
@@ -153,7 +135,7 @@ public class BallController : MonoBehaviour
             Debug.Log("Ball is not bouncing anymore!");
         }
     }
-    
+
     public void OnTriggerExit(Collider other)
     {
         if (other.gameObject.CompareTag("BasketRing"))
@@ -162,6 +144,4 @@ public class BallController : MonoBehaviour
             Debug.Log("Ball is bouncing again!");
         }
     }
-    
-    
 }

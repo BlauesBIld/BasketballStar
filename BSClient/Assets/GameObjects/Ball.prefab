@@ -127,6 +127,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1d720138c47403f45af83ac126675bfe, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  trajectoryLineRenderer: {fileID: 0}
+  resolution: 30
+  simulationTime: 2
   playerPrefab: {fileID: 0}
   defaultMaterial: {fileID: 13400000, guid: 2fc253a670cf6ec49b38d8856db06776, type: 2}
   noBounceMaterial: {fileID: 13400000, guid: fcf52ee58fa35e6449c8f343611dcb0d, type: 2}
