@@ -1,8 +1,5 @@
-using System;
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Serialization;
 
 public enum BallStates
 {
@@ -13,45 +10,65 @@ public enum BallStates
 
 public class BallController : MonoBehaviour
 {
-    public PlayerController playerPrefab;
-    private BallStates _ballState = BallStates.Dribbling;
-
     public PhysicMaterial defaultMaterial;
     public PhysicMaterial noBounceMaterial;
+    private readonly float _idleBounceForce = 10f;
+    private BallStates _ballState = BallStates.Dribbling;
+    private float _lastBallYVelocity;
 
     private Rigidbody _rigidbody;
-    private float _lastBallYVelocity = 0f;
-    private float _idleBounceForce = 10f;
 
-    void Start()
+    public void Reset()
+    {
+        _ballState = BallStates.Dribbling;
+        _rigidbody.velocity = Vector3.zero;
+        _rigidbody.angularVelocity = Vector3.zero;
+        transform.rotation = Quaternion.identity;
+        SetPositionNextToPlayer();
+    }
+
+    private void Start()
     {
         _rigidbody = GetComponent<Rigidbody>();
         SetPositionNextToPlayer();
     }
 
-    private void SetPositionNextToPlayer()
+    private void Update()
     {
-        Vector3 ballPositionNextToPlayer = playerPrefab.transform.position + playerPrefab.transform.forward * 0.25f +
-                                           playerPrefab.transform.right;
-        transform.position = ballPositionNextToPlayer;
+        if (_ballState == BallStates.Dribbling) HandleIdleBouncing();
+
+        if (_ballState == BallStates.Throwing) HandlePositionAbovePlayer();
     }
 
-    void Update()
+    public void OnTriggerEnter(Collider other)
     {
-        if (_ballState == BallStates.Dribbling)
+        if (other.gameObject.CompareTag("BasketRing"))
         {
-            HandleIdleBouncing();
+            GetComponent<SphereCollider>().material = noBounceMaterial;
+            Debug.Log("Ball is not bouncing anymore!");
         }
+    }
 
-        if (_ballState == BallStates.Throwing)
+    public void OnTriggerExit(Collider other)
+    {
+        if (other.gameObject.CompareTag("BasketRing"))
         {
-            HandlePositionAbovePlayer();
+            GetComponent<SphereCollider>().material = defaultMaterial;
+            Debug.Log("Ball is bouncing again!");
         }
+    }
+
+    private void SetPositionNextToPlayer()
+    {
+        PlayerController player = PlayerController.Instance;
+        Vector3 ballPositionNextToPlayer = player.transform.position + player.transform.forward * 0.25f +
+                                           player.transform.right;
+        transform.position = ballPositionNextToPlayer;
     }
 
     private void HandlePositionAbovePlayer()
     {
-        transform.position = playerPrefab.positionAboveHead.position;
+        transform.position = PlayerController.Instance.positionAboveHead.position;
     }
 
     private void HandleIdleBouncing()
@@ -79,9 +96,9 @@ public class BallController : MonoBehaviour
 
     private IEnumerator MoveBallAbovePlayer()
     {
-        float time = 0f;
-        float duration = 1f;
-        Vector3 targetPosition = playerPrefab.positionAboveHead.position;
+        var time = 0f;
+        var duration = 1f;
+        Vector3 targetPosition = PlayerController.Instance.positionAboveHead.position;
         while (time < duration)
         {
             time += Time.deltaTime;
@@ -105,43 +122,22 @@ public class BallController : MonoBehaviour
             Debug.Log("Perfect shot!");
         }
 
-        float optimalAngle = PlayerController.Instance.optimalPerfectShotAngleRad;
-        Vector3 forceVector = playerPrefab.transform.forward * Mathf.Cos(optimalAngle) +
-                              playerPrefab.transform.up * Mathf.Sin(optimalAngle);
+        PlayerController player = PlayerController.Instance;
+        var optimalAngle = PlayerController.Instance.optimalPerfectShotAngleRad;
+        Vector3 forceVector = player.transform.forward * Mathf.Cos(optimalAngle) +
+                              player.transform.up * Mathf.Sin(optimalAngle);
         _rigidbody.AddForce(forceVector * throwPower, ForceMode.Impulse);
 
         Debug.Log("Throw with power: " + throwPower);
 
-        float torqueForce = throwPower * 14f;
-        Vector3 torqueDirection = -playerPrefab.transform.right;
+        var torqueForce = throwPower * 14f;
+        Vector3 torqueDirection = -player.transform.right;
 
         _rigidbody.AddTorque(torqueDirection * torqueForce, ForceMode.Impulse);
     }
 
-    public void Reset()
+    public bool IsDribbling()
     {
-        _ballState = BallStates.Dribbling;
-        _rigidbody.velocity = Vector3.zero;
-        _rigidbody.angularVelocity = Vector3.zero;
-        transform.rotation = Quaternion.identity;
-        SetPositionNextToPlayer();
-    }
-
-    public void OnTriggerEnter(Collider other)
-    {
-        if (other.gameObject.CompareTag("BasketRing"))
-        {
-            GetComponent<SphereCollider>().material = noBounceMaterial;
-            Debug.Log("Ball is not bouncing anymore!");
-        }
-    }
-
-    public void OnTriggerExit(Collider other)
-    {
-        if (other.gameObject.CompareTag("BasketRing"))
-        {
-            GetComponent<SphereCollider>().material = defaultMaterial;
-            Debug.Log("Ball is bouncing again!");
-        }
+        return _ballState == BallStates.Dribbling;
     }
 }

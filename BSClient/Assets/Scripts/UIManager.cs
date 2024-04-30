@@ -7,5 +7,6 @@ public class UIManager : MonoBehaviour
     void Start()
     {
         StartMenuController.Instance.OpenStartMenu();
+        EndOfRoundScreenController.Instance.CloseEndOfRoundScreen();
     }
 }

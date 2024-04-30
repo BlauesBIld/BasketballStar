@@ -29,12 +29,8 @@ public class IngameUIManager : MonoBehaviour
 
     private void Start()
     {
-        PlayerController.Instance.CurrentSwipeDistanceChanged += UpdateThrowPowerBar;
-        PlayerController.Instance.OnThresholdsChanged += SetThrowPowerBarThresholds;
-    }
-
-    private void Update()
-    {
+        PlayerController.Instance.CurrentSwipeDistanceChangedEvent += UpdateThrowPowerBar;
+        PlayerController.Instance.ThresholdsChangedEvent += SetThrowPowerBarThresholds;
     }
 
     public void UpdateThrowPowerBar(float slideDistance)
@@ -71,15 +67,25 @@ public class IngameUIManager : MonoBehaviour
 
     public void UpdatePlayerScore(int score)
     {
-        playerScoreText.text = score.ToString();
+        playerScoreText.text = "Score: \n" + score;
     }
 
     public void UpdateTimer(int timeLeft)
     {
-        timerText.text = timeLeft.ToString();
+        timerText.text = Mathf.Max(timeLeft, 0).ToString();
         if (timeLeft <= 5)
         {
             //TODO: Slider fill to full for every second
         }
+    }
+
+    public void HideIngameUI()
+    {
+        gameObject.SetActive(false);
+    }
+
+    public void ShowIngameUI()
+    {
+        gameObject.SetActive(true);
     }
 }

@@ -6,12 +6,12 @@ using UnityEngine;
 public class GameManager : MonoBehaviour
 {
     public static GameManager Instance { get; private set; }
-    
+
     private OpponentController opponentController;
-    
+
     private void Awake()
     {
-        if(Instance == null)
+        if (Instance == null)
         {
             Instance = this;
         }
@@ -31,5 +31,11 @@ public class GameManager : MonoBehaviour
     {
         StartMenuController.Instance.CloseStartMenu();
         RoundManager.Instance.StartRound();
+    }
+
+    public void ExitToMainMenu()
+    {
+        EndOfRoundScreenController.Instance.CloseEndOfRoundScreen();
+        StartMenuController.Instance.OpenStartMenu();
     }
 }
