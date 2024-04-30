@@ -44,7 +44,7 @@ public class PlayerController : MonoBehaviour
     private void Start()
     {
         _rigidbody = GetComponent<Rigidbody>();
-        CalculateOptimalThrowPowers();
+        CalculateAndSetOptimalThrowValues();
     }
 
     private void Update()
@@ -137,7 +137,7 @@ public class PlayerController : MonoBehaviour
         CurrentSwipeDistanceChangedEvent?.Invoke(_currentSwipeDistance);
         ThrowEndedEvent?.Invoke();
         ballController.Reset();
-        CalculateOptimalThrowPowers();
+        CalculateAndSetOptimalThrowValues();
         SetThresholds();
         IngameUIManager.Instance.SetPerfectPowerIndicatorPositionAndHeight();
         _isChargingThrow = true;
@@ -148,14 +148,15 @@ public class PlayerController : MonoBehaviour
         lowestThrowPowerThreshold = optimalPerfectShotThrowPower / 2;
         highestPerfectThrowPowerThreshold = optimalPerfectShotThrowPower + 2f;
         highestBackBoardThrowPowerThreshold = optimalPerfectShotThrowPower * 1.5f +
-                                              (GetHorizontalDistanceFromCenterToHoop() -
-                                               GetHorizontalDistanceFromHoop());
+            (GetHorizontalDistanceFromCenterToHoop() -
+                GetHorizontalDistanceFromHoop());
         ThresholdsChangedEvent?.Invoke();
     }
 
     private float GetHorizontalDistanceFromCenterToHoop()
     {
-        return new Vector3(RoundManager.Instance.hoopCenter.position.x, 0, RoundManager.Instance.hoopCenter.position.z)
+        var hoopPosition = RoundManager.Instance.hoopCenter.position;
+        return new Vector3(hoopPosition.x, 0, hoopPosition.z)
             .magnitude;
     }
 
@@ -167,66 +168,51 @@ public class PlayerController : MonoBehaviour
     private void Throw()
     {
         Debug.Log("Current Swipe Distance: " + _currentSwipeDistance);
-        Debug.Log("maxSwipeDistance: " + _maxSwipeDistance);
-        Debug.Log("ConvertSwipeDistanceToThrowPower: " + ConvertSwipeDistanceToThrowPower());
-        var throwForce = Mathf.Max(ConvertSwipeDistanceToThrowPower(), lowestThrowPowerThreshold);
+        Debug.Log("ConvertSwipeDistanceToThrowPower NEW: " + Utils.ConvertSwipeDistanceToThrowPower(_currentSwipeDistance, _maxSwipeDistance, highestBackBoardThrowPowerThreshold));
+        var throwForce = Mathf.Max(Utils.ConvertSwipeDistanceToThrowPower(_currentSwipeDistance, _maxSwipeDistance, highestBackBoardThrowPowerThreshold), lowestThrowPowerThreshold);
         ballController.Throw(throwForce);
     }
 
-    private void CalculateOptimalThrowPowers()
+    private void CalculateAndSetOptimalThrowValues()
     {
         var ballThrowPosition = positionAboveHead.position;
-        ballThrowPosition.y += CalculatJumpHeight();
+        ballThrowPosition.y += Utils.CalculateJumpHeight(_jumpForce);
 
-        var ringCenterPosition = RoundManager.Instance.hoopCenter.position;
-
-        var horizontalDistance = GetHorizontalDistanceFromHoop();
-        var verticalDistance = ringCenterPosition.y - ballThrowPosition.y;
-
-        var minimumAngleRad = 45f * Mathf.Deg2Rad;
-        var optimalAngleRadCalculated =
-            Mathf.Atan(2 * verticalDistance / horizontalDistance + Mathf.Tan(minimumAngleRad));
-
-        var optimalThrowPowerCalculated = Mathf.Sqrt(-Physics.gravity.magnitude * Mathf.Pow(horizontalDistance, 2) /
-                                                     (2 * (verticalDistance -
-                                                           horizontalDistance * Mathf.Tan(optimalAngleRadCalculated)) *
-                                                      Mathf.Pow(Mathf.Cos(optimalAngleRadCalculated), 2)));
-        Debug.Log("Optimal Throw Power: " + optimalThrowPowerCalculated);
-
-        optimalPerfectShotThrowPower = optimalThrowPowerCalculated;
-        optimalPerfectShotAngleRad = optimalAngleRadCalculated;
-    }
-
-    public float CalculatJumpHeight()
-    {
-        var initialVelocity = _jumpForce;
-        var gravity = Physics.gravity.magnitude;
-        var jumpHeight = initialVelocity * initialVelocity / (2 * gravity);
-        return jumpHeight;
+        optimalPerfectShotAngleRad = Utils.CalculateOptimalThrowAngleRad(ballThrowPosition);
+        optimalPerfectShotThrowPower = Utils.CalculateOptimalThrowPower(ballThrowPosition, optimalPerfectShotAngleRad);
     }
 
     public void LookAtHoop()
     {
-        var lookAtPosition = new Vector3(RoundManager.Instance.hoopCenter.position.x, transform.position.y,
-            RoundManager.Instance.hoopCenter.position.z);
+        Vector3 hoopCenterPosition = RoundManager.Instance.hoopCenter.position;
+        Vector3 lookAtPosition = new Vector3(hoopCenterPosition.x, transform.position.y,
+            hoopCenterPosition.z);
         transform.LookAt(lookAtPosition);
     }
 
     public float GetHorizontalDistanceFromHoop()
     {
-        return Vector3.Distance(new Vector3(positionAboveHead.position.x, 0, positionAboveHead.position.z),
-            new Vector3(RoundManager.Instance.hoopCenter.position.x, 0, RoundManager.Instance.hoopCenter.position.z));
+        Vector3 hoopCenterPosition = RoundManager.Instance.hoopCenter.position;
+        Vector3 throwPosition = positionAboveHead.position;
+        return Vector3.Distance(new Vector3(throwPosition.x, 0, throwPosition.z),
+            new Vector3(hoopCenterPosition.x, 0, hoopCenterPosition.z));
     }
 
     public float GetHorizontalDistanceFromBackBoardHoop()
     {
-        return Vector3.Distance(new Vector3(positionAboveHead.position.x, 0, positionAboveHead.position.z),
-            new Vector3(RoundManager.Instance.backBoardHoopCenter.position.x, 0,
-                RoundManager.Instance.backBoardHoopCenter.position.z));
+        var ballThrowPosition = positionAboveHead.position;
+        var hoopCenterPosition = RoundManager.Instance.backBoardHoopCenter.position;
+        return Vector3.Distance(new Vector3(ballThrowPosition.x, 0, ballThrowPosition.z),
+            new Vector3(hoopCenterPosition.x, 0, hoopCenterPosition.z));
     }
 
-    public float ConvertSwipeDistanceToThrowPower()
+    public float GetSlideDistance()
     {
-        return _currentSwipeDistance * 100 / _maxSwipeDistance * highestBackBoardThrowPowerThreshold / 100;
+        return _currentSwipeDistance;
+    }
+
+    public float GetMaxSwipeDistance()
+    {
+        return _maxSwipeDistance;
     }
 }

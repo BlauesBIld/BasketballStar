@@ -1,11 +1,12 @@
 using TMPro;
 using UnityEngine;
+using UnityEngine.Serialization;
 using UnityEngine.UI;
 
 public class IngameUIManager : MonoBehaviour
 {
-    public GameObject throwPowerBar;
-    public GameObject perfectPowerIndicator;
+    public GameObject throwSwipeDistanceBar;
+    public RectTransform perfectPowerIndicator;
 
     public TextMeshProUGUI playerScoreText;
 
@@ -35,13 +36,13 @@ public class IngameUIManager : MonoBehaviour
 
     public void UpdateThrowPowerBar(float slideDistance)
     {
-        var power = PlayerController.Instance.ConvertSwipeDistanceToThrowPower();
-        throwPowerBar.GetComponent<Slider>().value = power;
+        var power = PlayerController.Instance.GetSlideDistance();
+        throwSwipeDistanceBar.GetComponent<Slider>().value = power;
     }
 
     public void SetThrowPowerBarThresholds()
     {
-        throwPowerBar.GetComponent<Slider>().maxValue = PlayerController.Instance.highestBackBoardThrowPowerThreshold;
+        throwSwipeDistanceBar.GetComponent<Slider>().maxValue = PlayerController.Instance.GetMaxSwipeDistance();
     }
 
     public void SetPerfectPowerIndicatorPositionAndHeight()
@@ -49,20 +50,21 @@ public class IngameUIManager : MonoBehaviour
         var perfectPower = PlayerController.Instance.optimalPerfectShotThrowPower;
         var threshold = PlayerController.Instance.perfectShotThreshold;
 
-        var lowerPerfectPowerInPercent = (perfectPower - threshold) / throwPowerBar.GetComponent<Slider>().maxValue;
-        var upperPerfectPowerInPercent = (perfectPower + threshold) / throwPowerBar.GetComponent<Slider>().maxValue;
+        float maxPower = PlayerController.Instance.highestBackBoardThrowPowerThreshold;
 
-        var rt = throwPowerBar.GetComponent<RectTransform>();
+        var lowerPerfectPowerInPercent = (perfectPower - threshold) / maxPower;
+        var upperPerfectPowerInPercent = (perfectPower + threshold) / maxPower;
+
+        var rt = throwSwipeDistanceBar.GetComponent<RectTransform>();
         var maxHeight = rt.rect.height;
 
         var yPosition = lowerPerfectPowerInPercent * maxHeight;
         var height = (upperPerfectPowerInPercent - lowerPerfectPowerInPercent) * maxHeight;
 
-        perfectPowerIndicator.GetComponent<RectTransform>().position = new Vector3(
-            perfectPowerIndicator.GetComponent<RectTransform>().position.x, rt.transform.position.y + yPosition,
-            perfectPowerIndicator.GetComponent<RectTransform>().position.z);
-        perfectPowerIndicator.GetComponent<RectTransform>().sizeDelta =
-            new Vector2(perfectPowerIndicator.GetComponent<RectTransform>().sizeDelta.x, height);
+        var indicatorPosition = perfectPowerIndicator.position;
+        perfectPowerIndicator.position = new Vector3(indicatorPosition.x, rt.transform.position.y + yPosition, indicatorPosition.z);
+        perfectPowerIndicator.sizeDelta =
+            new Vector2(perfectPowerIndicator.sizeDelta.x, height);
     }
 
     public void UpdatePlayerScore(int score)
