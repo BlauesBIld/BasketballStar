@@ -4,8 +4,8 @@
 TagManager:
   serializedVersion: 2
   tags:
-  - BasketRing
   - HoopScoreCollider
+  - BounceChanger
   layers:
   - Default
   - TransparentFX
@@ -13,8 +13,8 @@ TagManager:
   - 
   - Water
   - UI
-  - BasketRing
-  - 
+  - Hoop
+  - BackBoard
   - 
   - 
   - 

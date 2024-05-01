@@ -21,6 +21,7 @@ public class BallController : MonoBehaviour
     public void Reset()
     {
         _ballState = BallStates.Dribbling;
+        _rigidbody = GetComponent<Rigidbody>();
         _rigidbody.velocity = Vector3.zero;
         _rigidbody.angularVelocity = Vector3.zero;
         transform.rotation = Quaternion.identity;
@@ -42,19 +43,17 @@ public class BallController : MonoBehaviour
 
     public void OnTriggerEnter(Collider other)
     {
-        if (other.gameObject.CompareTag("BasketRing"))
+        if (other.gameObject.CompareTag("BounceChanger"))
         {
             GetComponent<SphereCollider>().material = noBounceMaterial;
-            Debug.Log("Ball is not bouncing anymore!");
         }
     }
 
     public void OnTriggerExit(Collider other)
     {
-        if (other.gameObject.CompareTag("BasketRing"))
+        if (other.gameObject.CompareTag("BounceChanger"))
         {
             GetComponent<SphereCollider>().material = defaultMaterial;
-            Debug.Log("Ball is bouncing again!");
         }
     }
 
@@ -62,7 +61,7 @@ public class BallController : MonoBehaviour
     {
         PlayerController player = PlayerController.Instance;
         Vector3 ballPositionNextToPlayer = player.transform.position + player.transform.forward * 0.25f +
-                                           player.transform.right;
+            player.transform.right;
         transform.position = ballPositionNextToPlayer;
     }
 
@@ -82,7 +81,7 @@ public class BallController : MonoBehaviour
         _lastBallYVelocity = _rigidbody.velocity.y;
     }
 
-    public void StartThrowing()
+    public void StartCharging()
     {
         _ballState = BallStates.Throwing;
         MoveBallAbovePlayerInOneSecond();
@@ -114,21 +113,18 @@ public class BallController : MonoBehaviour
         _ballState = BallStates.Flying;
 
         if (throwPower < PlayerController.Instance.optimalPerfectShotThrowPower +
-            PlayerController.Instance.perfectShotThreshold &&
+            PlayerController.Instance.PerfectShotThreshold &&
             throwPower > PlayerController.Instance.optimalPerfectShotThrowPower -
-            PlayerController.Instance.perfectShotThreshold)
+            PlayerController.Instance.PerfectShotThreshold)
         {
             throwPower = PlayerController.Instance.optimalPerfectShotThrowPower;
-            Debug.Log("Perfect shot!");
         }
 
         PlayerController player = PlayerController.Instance;
         var optimalAngle = PlayerController.Instance.optimalPerfectShotAngleRad;
         Vector3 forceVector = player.transform.forward * Mathf.Cos(optimalAngle) +
-                              player.transform.up * Mathf.Sin(optimalAngle);
+            player.transform.up * Mathf.Sin(optimalAngle);
         _rigidbody.AddForce(forceVector * throwPower, ForceMode.Impulse);
-
-        Debug.Log("Throw with power: " + throwPower);
 
         var torqueForce = throwPower * 14f;
         Vector3 torqueDirection = -player.transform.right;

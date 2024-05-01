@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -11,7 +12,7 @@ public class RoundManager : MonoBehaviour
     public Transform backBoardHoopCenter;
 
     private readonly float _maxDistanceFromCenterOfPlayField = 10f;
-    private readonly float _roundTime = 20f;
+    private readonly float _roundTime = 7f;
 
     private bool _isRoundActive;
 
@@ -22,6 +23,9 @@ public class RoundManager : MonoBehaviour
 
     private float _playerShotCounter;
     private float _roundStartTimeStamp;
+
+    public event Action RoundEndedEvent;
+    public event Action RoundStartedEvent;
 
     public static RoundManager Instance { get; private set; }
 
@@ -38,13 +42,6 @@ public class RoundManager : MonoBehaviour
         }
     }
 
-    private void Start()
-    {
-        PlayerController.Instance.ThrowEndedEvent += PlayerShot;
-        PlayerController.Instance.ResetShotAfterShootTime();
-        PlayerScoreChangedEvent += IngameUIManager.Instance.UpdatePlayerScore;
-    }
-
     private void Update()
     {
         if (_isRoundActive) IngameUIManager.Instance.UpdateTimer(GetTimeLeft());
@@ -55,14 +52,19 @@ public class RoundManager : MonoBehaviour
 
     public void StartRound()
     {
+        InstantiatePlayer();
+        RoundStartedEvent += PlayerController.Instance.ResetShot;
         _isRoundActive = true;
         _playerScore = 0;
-        IngameUIManager.Instance.ShowIngameUI();
-        PlayerScoreChangedEvent?.Invoke(_playerScore);
         AssignPlayerToRandomPosition();
         StartCoroutine(EndGameAfterTime());
-        PlayerController.Instance.enabled = true;
-        PlayerController.Instance.ResetShot();
+        RoundStartedEvent?.Invoke();
+        PlayerScoreChangedEvent?.Invoke(_playerScore);
+    }
+
+    void InstantiatePlayer()
+    {
+        Instantiate(playerPrefab, new Vector3(0, 2, 0), Quaternion.identity);
     }
 
     private IEnumerator EndGameAfterTime()
@@ -74,11 +76,10 @@ public class RoundManager : MonoBehaviour
         while (!PlayerController.Instance.ballController.IsDribbling())
             yield return null;
 
-        PlayerController.Instance.enabled = false;
-        IngameUIManager.Instance.HideIngameUI();
         SetPlayerCardValue();
         ShowEndOfRoundScreen();
         _isRoundActive = false;
+        RoundEndedEvent?.Invoke();
     }
 
     private void SetPlayerCardValue()
@@ -98,6 +99,7 @@ public class RoundManager : MonoBehaviour
             Random.Range(-_maxDistanceFromCenterOfPlayField, _maxDistanceFromCenterOfPlayField));
         PlayerController.Instance.transform.position = randomPosition;
         PlayerController.Instance.LookAtHoop();
+        CameraController.Instance.BindToPlayer();
     }
 
     public void PlayerShot()
@@ -114,11 +116,21 @@ public class RoundManager : MonoBehaviour
 
     public int GetTimeLeft()
     {
-        return (int) (_roundTime - (Time.time - _roundStartTimeStamp));
+        return (int)(_roundTime - (Time.time - _roundStartTimeStamp));
     }
 
     public List<OpponentController> GetOpponents()
     {
         return _opponents;
+    }
+    public bool IsRoundActive()
+    {
+        return _isRoundActive;
+    }
+    public Vector3 GetCenterOfPlayField()
+    {
+        Vector3 hoopPosition = hoopCenter.position;
+        hoopPosition.y = 0;
+        return hoopPosition / 2;
     }
 }

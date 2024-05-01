@@ -1,3 +1,4 @@
+using System;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Serialization;
@@ -20,6 +21,8 @@ public class IngameUIManager : MonoBehaviour
         if (Instance == null)
         {
             Instance = this;
+            RoundManager.Instance.RoundEndedEvent += HideIngameUIAndUnsubsribeFromEvents;
+            RoundManager.Instance.RoundStartedEvent += ShowIngameUIAndSubscribeToEvents;
         }
         else
         {
@@ -28,10 +31,8 @@ public class IngameUIManager : MonoBehaviour
         }
     }
 
-    private void Start()
+    void Start()
     {
-        PlayerController.Instance.CurrentSwipeDistanceChangedEvent += UpdateThrowPowerBar;
-        PlayerController.Instance.ThresholdsChangedEvent += SetThrowPowerBarThresholds;
     }
 
     public void UpdateThrowPowerBar(float slideDistance)
@@ -40,7 +41,7 @@ public class IngameUIManager : MonoBehaviour
         throwSwipeDistanceBar.GetComponent<Slider>().value = power;
     }
 
-    public void SetThrowPowerBarThresholds()
+    public void SetThrowSwipeDistanceBarThresholds()
     {
         throwSwipeDistanceBar.GetComponent<Slider>().maxValue = PlayerController.Instance.GetMaxSwipeDistance();
     }
@@ -48,12 +49,13 @@ public class IngameUIManager : MonoBehaviour
     public void SetPerfectPowerIndicatorPositionAndHeight()
     {
         var perfectPower = PlayerController.Instance.optimalPerfectShotThrowPower;
-        var threshold = PlayerController.Instance.perfectShotThreshold;
+        var threshold = PlayerController.Instance.PerfectShotThreshold;
 
-        float maxPower = PlayerController.Instance.highestBackBoardThrowPowerThreshold;
+        float maxPower = PlayerController.Instance.GetThrowPowerRange();
+        float lowestPower = PlayerController.Instance.GetLowestThrowPower();
 
-        var lowerPerfectPowerInPercent = (perfectPower - threshold) / maxPower;
-        var upperPerfectPowerInPercent = (perfectPower + threshold) / maxPower;
+        var lowerPerfectPowerInPercent = (perfectPower - threshold - lowestPower) / maxPower;
+        var upperPerfectPowerInPercent = (perfectPower + threshold - lowestPower) / maxPower;
 
         var rt = throwSwipeDistanceBar.GetComponent<RectTransform>();
         var maxHeight = rt.rect.height;
@@ -81,13 +83,19 @@ public class IngameUIManager : MonoBehaviour
         }
     }
 
-    public void HideIngameUI()
+    public void HideIngameUIAndUnsubsribeFromEvents()
     {
         gameObject.SetActive(false);
+
+        RoundManager.Instance.PlayerScoreChangedEvent -= UpdatePlayerScore;
+        PlayerController.Instance.CurrentSwipeDistanceChangedEvent -= UpdateThrowPowerBar;
     }
 
-    public void ShowIngameUI()
+    public void ShowIngameUIAndSubscribeToEvents()
     {
         gameObject.SetActive(true);
+        SetThrowSwipeDistanceBarThresholds();
+        RoundManager.Instance.PlayerScoreChangedEvent += UpdatePlayerScore;
+        PlayerController.Instance.CurrentSwipeDistanceChangedEvent += UpdateThrowPowerBar;
     }
 }

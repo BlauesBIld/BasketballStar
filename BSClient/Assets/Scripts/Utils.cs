@@ -4,9 +4,12 @@ using UnityEngine;
 
 public class Utils
 {
-    public static float ConvertSwipeDistanceToThrowPower(float swipeDistance, float maxSwipeDistance, float maxThrowPower)
+    public static float ConvertSwipeDistanceToThrowPower(float swipeDistance)
     {
-        return swipeDistance / maxSwipeDistance * maxThrowPower;
+        float maxSwipeDistance = PlayerController.Instance.GetMaxSwipeDistance();
+        float maxThrowPower = PlayerController.Instance.GetThrowPowerRange();
+        float lowestThrowPowerThreshold = PlayerController.Instance.GetLowestThrowPower();
+        return swipeDistance / maxSwipeDistance * maxThrowPower + lowestThrowPowerThreshold;
     }
 
     public static float ConvertThrowPowerToSwipeDistance(float throwPower, float maxSwipeDistance, float maxThrowPower)

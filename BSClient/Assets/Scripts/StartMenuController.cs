@@ -28,7 +28,7 @@ public class StartMenuController : MonoBehaviour
     {
         gameObject.SetActive(false);
     }
-    
+
     public void OpenStartMenu()
     {
         gameObject.SetActive(true);

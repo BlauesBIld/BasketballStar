@@ -8,11 +8,12 @@ public class PlayerController : MonoBehaviour
 
     public float optimalPerfectShotThrowPower;
     public float optimalPerfectShotAngleRad;
-    public float perfectShotThreshold = 1f;
 
-    public float lowestThrowPowerThreshold;
-    public float highestPerfectThrowPowerThreshold;
-    public float highestBackBoardThrowPowerThreshold;
+    public float PerfectShotThreshold { get; } = 0.2f;
+
+    private float _lowestThrowPowerThreshold;
+    private float _highestPerfectThrowPowerThreshold;
+    private float _highestBackBoardThrowPowerThreshold;
 
     public BallController ballController;
     public Transform positionAboveHead;
@@ -44,7 +45,7 @@ public class PlayerController : MonoBehaviour
     private void Start()
     {
         _rigidbody = GetComponent<Rigidbody>();
-        CalculateAndSetOptimalThrowValues();
+        ThrowEndedEvent += RoundManager.Instance.PlayerShot;
     }
 
     private void Update()
@@ -52,25 +53,17 @@ public class PlayerController : MonoBehaviour
         HandleSwipeUp();
     }
 
-    private void OnEnable()
-    {
-        ballController.enabled = true;
-    }
-
-    private void OnDisable()
-    {
-        ballController.enabled = false;
-    }
-
     public event OnCurrentSwipeDistanceChanged CurrentSwipeDistanceChangedEvent;
     public event Action ThrowEndedEvent;
+    public event Action ThrowStartedEvent;
     public event Action ThresholdsChangedEvent;
 
     private void HandleSwipeUp()
     {
-        if (Input.touchCount > 0)
+        if (RoundManager.Instance.IsRoundActive() && Input.touchCount > 0)
         {
             if (_isChargingThrow)
+            {
                 if (_firstSwipeDirection == null || _firstSwipeDirection > 0)
                 {
                     if (Input.GetTouch(0).phase == TouchPhase.Began)
@@ -85,7 +78,7 @@ public class PlayerController : MonoBehaviour
                             if (_firstSwipeDirection == null)
                             {
                                 _firstSwipeDirection = swipeDistance;
-                                ballController.StartThrowing();
+                                ballController.StartCharging();
                                 StartCoroutine(StopChargingAndCallJumpThrowAfterOneSecond());
                             }
                         }
@@ -98,9 +91,10 @@ public class PlayerController : MonoBehaviour
                         CurrentSwipeDistanceChangedEvent?.Invoke(_currentSwipeDistance);
                     }
                 }
-
+            }
             if (Input.GetTouch(0).phase == TouchPhase.Ended) _firstSwipeDirection = null;
         }
+
     }
 
     private IEnumerator StopChargingAndCallJumpThrowAfterOneSecond()
@@ -121,7 +115,7 @@ public class PlayerController : MonoBehaviour
         while (_rigidbody.velocity.y >= 0) yield return null;
 
         _currentSwipeDistance = Mathf.Min(_currentSwipeDistance, _maxSwipeDistance);
-        Throw();
+        ThrowBall();
         StartCoroutine(ResetShotAfterShootTime());
     }
 
@@ -145,11 +139,9 @@ public class PlayerController : MonoBehaviour
 
     private void SetThresholds()
     {
-        lowestThrowPowerThreshold = optimalPerfectShotThrowPower / 2;
-        highestPerfectThrowPowerThreshold = optimalPerfectShotThrowPower + 2f;
-        highestBackBoardThrowPowerThreshold = optimalPerfectShotThrowPower * 1.5f +
-            (GetHorizontalDistanceFromCenterToHoop() -
-                GetHorizontalDistanceFromHoop());
+        _lowestThrowPowerThreshold = optimalPerfectShotThrowPower - 4f;
+        _highestPerfectThrowPowerThreshold = optimalPerfectShotThrowPower + 1f;
+        _highestBackBoardThrowPowerThreshold = optimalPerfectShotThrowPower + 4f;
         ThresholdsChangedEvent?.Invoke();
     }
 
@@ -165,11 +157,10 @@ public class PlayerController : MonoBehaviour
         _rigidbody.AddForce(Vector3.up * _jumpForce, ForceMode.VelocityChange);
     }
 
-    private void Throw()
+    private void ThrowBall()
     {
-        Debug.Log("Current Swipe Distance: " + _currentSwipeDistance);
-        Debug.Log("ConvertSwipeDistanceToThrowPower NEW: " + Utils.ConvertSwipeDistanceToThrowPower(_currentSwipeDistance, _maxSwipeDistance, highestBackBoardThrowPowerThreshold));
-        var throwForce = Mathf.Max(Utils.ConvertSwipeDistanceToThrowPower(_currentSwipeDistance, _maxSwipeDistance, highestBackBoardThrowPowerThreshold), lowestThrowPowerThreshold);
+        ThrowStartedEvent?.Invoke();
+        var throwForce = Utils.ConvertSwipeDistanceToThrowPower(_currentSwipeDistance);
         ballController.Throw(throwForce);
     }
 
@@ -214,5 +205,21 @@ public class PlayerController : MonoBehaviour
     public float GetMaxSwipeDistance()
     {
         return _maxSwipeDistance;
+    }
+
+    public float GetLowestThrowPower()
+    {
+        return _lowestThrowPowerThreshold;
+    }
+
+    public float GetThrowPowerRange()
+    {
+        return _highestBackBoardThrowPowerThreshold - _lowestThrowPowerThreshold;
+    }
+
+    void OnDestroy()
+    {
+        Instance = null;
+        RoundManager.Instance.RoundStartedEvent -= ResetShot;
     }
 }

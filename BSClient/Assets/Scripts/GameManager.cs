@@ -7,7 +7,7 @@ public class GameManager : MonoBehaviour
 {
     public static GameManager Instance { get; private set; }
 
-    private OpponentController opponentController;
+    private OpponentController _opponentController;
 
     private void Awake()
     {
@@ -20,11 +20,6 @@ public class GameManager : MonoBehaviour
             Debug.LogWarning("Tried to create 2nd GameManager Instance. Deleting it instead.");
             Destroy(gameObject);
         }
-    }
-
-    private void Start()
-    {
-        PlayerController.Instance.enabled = false;
     }
 
     public void StartSoloGame()

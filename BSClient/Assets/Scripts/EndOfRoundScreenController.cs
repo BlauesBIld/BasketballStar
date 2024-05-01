@@ -35,6 +35,10 @@ public class EndOfRoundScreenController : MonoBehaviour
 
     public void CloseEndOfRoundScreen()
     {
+        if (PlayerController.Instance != null)
+        {
+            Destroy(PlayerController.Instance.transform.parent.gameObject);
+        }
         gameObject.SetActive(false);
     }
 }
