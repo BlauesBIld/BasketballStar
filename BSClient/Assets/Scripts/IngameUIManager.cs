@@ -7,7 +7,10 @@ using UnityEngine.UI;
 public class IngameUIManager : MonoBehaviour
 {
     public GameObject throwSwipeDistanceBar;
-    public RectTransform perfectPowerIndicator;
+
+    public RectTransform perfectShotPowerIndicator;
+
+    public RectTransform perfectBackboardShotPowerIndicator;
 
     public TextMeshProUGUI playerScoreText;
 
@@ -21,7 +24,7 @@ public class IngameUIManager : MonoBehaviour
         if (Instance == null)
         {
             Instance = this;
-            RoundManager.Instance.RoundEndedEvent += HideIngameUIAndUnsubsribeFromEvents;
+            RoundManager.Instance.RoundEndedEvent += HideIngameUIAndUnsubscribeFromEvents;
             RoundManager.Instance.RoundStartedEvent += ShowIngameUIAndSubscribeToEvents;
         }
         else
@@ -33,6 +36,7 @@ public class IngameUIManager : MonoBehaviour
 
     void Start()
     {
+        HideIngameUI();
     }
 
     public void UpdateThrowPowerBar(float slideDistance)
@@ -46,27 +50,48 @@ public class IngameUIManager : MonoBehaviour
         throwSwipeDistanceBar.GetComponent<Slider>().maxValue = PlayerController.Instance.GetMaxSwipeDistance();
     }
 
-    public void SetPerfectPowerIndicatorPositionAndHeight()
+    public void SetPerfectPowerIndicatorsPositionAndHeight()
     {
-        var perfectPower = PlayerController.Instance.optimalPerfectShotThrowPower;
-        var threshold = PlayerController.Instance.PerfectShotThreshold;
+        var perfectShotPower = PlayerController.Instance.optimalPerfectShotThrowPower;
+        var perfectBackboardShotPower = PlayerController.Instance.optimalBackBoardShotThrowPower;
+        var perfectShotThreshold = PlayerController.Instance.PerfectShotThreshold;
+        var perfectBackBoardShotThreshold = PlayerController.Instance.PerfectBackBoardShotThreshold;
 
         float maxPower = PlayerController.Instance.GetThrowPowerRange();
         float lowestPower = PlayerController.Instance.GetLowestThrowPower();
 
-        var lowerPerfectPowerInPercent = (perfectPower - threshold - lowestPower) / maxPower;
-        var upperPerfectPowerInPercent = (perfectPower + threshold - lowestPower) / maxPower;
+        var lowerPerfectShotPowerInPercent = (perfectShotPower - perfectShotThreshold - lowestPower) / maxPower;
+        var upperPerfectShotPowerInPercent = (perfectShotPower + perfectShotThreshold - lowestPower) / maxPower;
+
+        var lowerPerfectBackboardShotPowerInPercent =
+            (perfectBackboardShotPower - perfectBackBoardShotThreshold - lowestPower) / maxPower;
+        var upperPerfectBackboardShotPowerInPercent =
+            (perfectBackboardShotPower + perfectBackBoardShotThreshold - lowestPower) / maxPower;
 
         var rt = throwSwipeDistanceBar.GetComponent<RectTransform>();
         var maxHeight = rt.rect.height;
 
-        var yPosition = lowerPerfectPowerInPercent * maxHeight;
-        var height = (upperPerfectPowerInPercent - lowerPerfectPowerInPercent) * maxHeight;
+        var perfectShotYPosition = lowerPerfectShotPowerInPercent * maxHeight;
+        var perfectShotHeight = (upperPerfectShotPowerInPercent - lowerPerfectShotPowerInPercent) * maxHeight;
 
-        var indicatorPosition = perfectPowerIndicator.position;
-        perfectPowerIndicator.position = new Vector3(indicatorPosition.x, rt.transform.position.y + yPosition, indicatorPosition.z);
-        perfectPowerIndicator.sizeDelta =
-            new Vector2(perfectPowerIndicator.sizeDelta.x, height);
+        var perfectBackboardShotYPosition = lowerPerfectBackboardShotPowerInPercent * maxHeight;
+        var perfectBackboardShotHeight =
+            (upperPerfectBackboardShotPowerInPercent - lowerPerfectBackboardShotPowerInPercent) * maxHeight;
+
+        var perfectShotIndicatorPosition = perfectShotPowerIndicator.position;
+        perfectShotPowerIndicator.position =
+            new Vector3(perfectShotIndicatorPosition.x, rt.transform.position.y + perfectShotYPosition,
+                perfectShotIndicatorPosition.z);
+        perfectShotPowerIndicator.sizeDelta =
+            new Vector2(perfectShotPowerIndicator.sizeDelta.x, perfectShotHeight);
+
+        var perfectBackboardShotIndicatorPosition = perfectBackboardShotPowerIndicator.position;
+        perfectBackboardShotPowerIndicator.position =
+            new Vector3(perfectBackboardShotIndicatorPosition.x,
+                rt.transform.position.y + perfectBackboardShotYPosition,
+                perfectBackboardShotIndicatorPosition.z);
+        perfectBackboardShotPowerIndicator.sizeDelta =
+            new Vector2(perfectShotPowerIndicator.sizeDelta.x, perfectBackboardShotHeight);
     }
 
     public void UpdatePlayerScore(int score)
@@ -83,19 +108,29 @@ public class IngameUIManager : MonoBehaviour
         }
     }
 
-    public void HideIngameUIAndUnsubsribeFromEvents()
+    public void HideIngameUIAndUnsubscribeFromEvents()
     {
-        gameObject.SetActive(false);
+        HideIngameUI();
 
         RoundManager.Instance.PlayerScoreChangedEvent -= UpdatePlayerScore;
         PlayerController.Instance.CurrentSwipeDistanceChangedEvent -= UpdateThrowPowerBar;
     }
 
+    public void HideIngameUI()
+    {
+        gameObject.SetActive(false);
+    }
+
     public void ShowIngameUIAndSubscribeToEvents()
     {
-        gameObject.SetActive(true);
+        ShowIngameUI();
         SetThrowSwipeDistanceBarThresholds();
         RoundManager.Instance.PlayerScoreChangedEvent += UpdatePlayerScore;
         PlayerController.Instance.CurrentSwipeDistanceChangedEvent += UpdateThrowPowerBar;
+    }
+
+    public void ShowIngameUI()
+    {
+        gameObject.SetActive(true);
     }
 }

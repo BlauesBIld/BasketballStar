@@ -17,6 +17,32 @@ public class Utils
         return throwPower / maxThrowPower * maxSwipeDistance;
     }
 
+    public static float CalculateOptimalBackBoardThrowAngleRad(Vector3 ballThrowPosition)
+    {
+        Vector3 backboardRingCenterPosition = RoundManager.Instance.backBoardHoopCenter.position;
+
+        float horizontalDistance = Vector3.Distance(new Vector3(ballThrowPosition.x, 0, ballThrowPosition.z),
+            new Vector3(backboardRingCenterPosition.x, 0, backboardRingCenterPosition.z));
+        float verticalDistance = backboardRingCenterPosition.y - ballThrowPosition.y;
+
+        float minimumAngleRad = 45f * Mathf.Deg2Rad;
+        return Mathf.Atan(2 * verticalDistance / horizontalDistance + Mathf.Tan(minimumAngleRad));
+    }
+
+    public static float CalculateOptimalBackBoardThrowPower(Vector3 ballThrowPosition, float optimalAngleRad)
+    {
+        Vector3 backboardRingCenterPosition = RoundManager.Instance.backBoardHoopCenter.position;
+
+        float horizontalDistance = Vector3.Distance(new Vector3(ballThrowPosition.x, 0, ballThrowPosition.z),
+            new Vector3(backboardRingCenterPosition.x, 0, backboardRingCenterPosition.z));
+        float verticalDistance = backboardRingCenterPosition.y - ballThrowPosition.y;
+
+        return Mathf.Sqrt(-Physics.gravity.magnitude * Mathf.Pow(horizontalDistance, 2) /
+                          (2 * (verticalDistance -
+                                horizontalDistance * Mathf.Tan(optimalAngleRad)) *
+                           Mathf.Pow(Mathf.Cos(optimalAngleRad), 2)));
+    }
+
     public static float CalculateOptimalThrowAngleRad(Vector3 ballThrowPosition)
     {
         Vector3 ringCenterPosition = RoundManager.Instance.hoopCenter.position;
@@ -38,9 +64,20 @@ public class Utils
         float verticalDistance = ringCenterPosition.y - ballThrowPosition.y;
 
         return Mathf.Sqrt(-Physics.gravity.magnitude * Mathf.Pow(horizontalDistance, 2) /
-            (2 * (verticalDistance -
-                    horizontalDistance * Mathf.Tan(optimalAngleRad)) *
-                Mathf.Pow(Mathf.Cos(optimalAngleRad), 2)));
+                          (2 * (verticalDistance -
+                                horizontalDistance * Mathf.Tan(optimalAngleRad)) *
+                           Mathf.Pow(Mathf.Cos(optimalAngleRad), 2)));
+    }
+
+    public static float CalculateTimeToReachHoop(Vector3 ballThrowPosition, float optimalAngleRad)
+    {
+        Vector3 ringCenterPosition = RoundManager.Instance.hoopCenter.position;
+
+        float horizontalDistance = Vector3.Distance(new Vector3(ballThrowPosition.x, 0, ballThrowPosition.z),
+            new Vector3(ringCenterPosition.x, 0, ringCenterPosition.z));
+
+        return horizontalDistance /
+               (Mathf.Cos(optimalAngleRad) * CalculateOptimalThrowPower(ballThrowPosition, optimalAngleRad));
     }
 
     public static float CalculateJumpHeight(float jumpForce)

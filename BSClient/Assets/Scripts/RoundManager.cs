@@ -11,9 +11,9 @@ public class RoundManager : MonoBehaviour
     public Transform hoopCenter;
     public Transform backBoardHoopCenter;
 
-    private readonly float _maxDistanceFromCenterOfPlayField = 10f;
-    private readonly float _roundTime = 7f;
+    private readonly float _maxPossibleDistanceFromCenterOfPlayField = 10f;
 
+    private float _roundTime = 15f;
     private bool _isRoundActive;
 
     private int _playerScore;
@@ -95,11 +95,11 @@ public class RoundManager : MonoBehaviour
 
     private void AssignPlayerToRandomPosition()
     {
-        var randomPosition = new Vector3(Random.Range(0, _maxDistanceFromCenterOfPlayField), 2,
-            Random.Range(-_maxDistanceFromCenterOfPlayField, _maxDistanceFromCenterOfPlayField));
+        var randomPosition = new Vector3(Random.Range(0, _maxPossibleDistanceFromCenterOfPlayField), 2,
+            Random.Range(-_maxPossibleDistanceFromCenterOfPlayField, _maxPossibleDistanceFromCenterOfPlayField));
         PlayerController.Instance.transform.position = randomPosition;
         PlayerController.Instance.LookAtHoop();
-        CameraController.Instance.BindToPlayer();
+        CameraController.Instance.SetPositionBehindPlayer();
     }
 
     public void PlayerShot()
@@ -108,7 +108,7 @@ public class RoundManager : MonoBehaviour
         if (_playerShotCounter % 2 == 0) AssignPlayerToRandomPosition();
     }
 
-    public void AddPointsToPlayerScore(int points)
+    public void AddPointsToPlayer(int points)
     {
         _playerScore += points;
         PlayerScoreChangedEvent?.Invoke(_playerScore);
@@ -116,21 +116,33 @@ public class RoundManager : MonoBehaviour
 
     public int GetTimeLeft()
     {
-        return (int)(_roundTime - (Time.time - _roundStartTimeStamp));
+        return (int) (_roundTime - (Time.time - _roundStartTimeStamp));
     }
 
     public List<OpponentController> GetOpponents()
     {
         return _opponents;
     }
+
     public bool IsRoundActive()
     {
         return _isRoundActive;
     }
+
     public Vector3 GetCenterOfPlayField()
     {
         Vector3 hoopPosition = hoopCenter.position;
         hoopPosition.y = 0;
         return hoopPosition / 2;
+    }
+
+    public float GetRoundTime()
+    {
+        return _roundTime;
+    }
+
+    public float SetRoundTime(float time)
+    {
+        return _roundTime = time;
     }
 }

@@ -8,8 +8,12 @@ public class PlayerController : MonoBehaviour
 
     public float optimalPerfectShotThrowPower;
     public float optimalPerfectShotAngleRad;
+    public float optimalBackBoardShotThrowPower;
+    public float optimalBackBoardShotAngleRad;
 
-    public float PerfectShotThreshold { get; } = 0.2f;
+    public float PerfectShotThreshold { get; } = 0.22f;
+    public float PerfectBackBoardShotThreshold { get; } = 0.13f;
+    public float ShotFlyingTime { get; } = 2f;
 
     private float _lowestThrowPowerThreshold;
     private float _highestPerfectThrowPowerThreshold;
@@ -92,9 +96,9 @@ public class PlayerController : MonoBehaviour
                     }
                 }
             }
+
             if (Input.GetTouch(0).phase == TouchPhase.Ended) _firstSwipeDirection = null;
         }
-
     }
 
     private IEnumerator StopChargingAndCallJumpThrowAfterOneSecond()
@@ -121,7 +125,7 @@ public class PlayerController : MonoBehaviour
 
     public IEnumerator ResetShotAfterShootTime()
     {
-        yield return new WaitForSeconds(2f);
+        yield return new WaitForSeconds(ShotFlyingTime);
         ResetShot();
     }
 
@@ -133,15 +137,17 @@ public class PlayerController : MonoBehaviour
         ballController.Reset();
         CalculateAndSetOptimalThrowValues();
         SetThresholds();
-        IngameUIManager.Instance.SetPerfectPowerIndicatorPositionAndHeight();
+        IngameUIManager.Instance.SetPerfectPowerIndicatorsPositionAndHeight();
         _isChargingThrow = true;
     }
 
     private void SetThresholds()
     {
-        _lowestThrowPowerThreshold = optimalPerfectShotThrowPower - 4f;
-        _highestPerfectThrowPowerThreshold = optimalPerfectShotThrowPower + 1f;
-        _highestBackBoardThrowPowerThreshold = optimalPerfectShotThrowPower + 4f;
+        _lowestThrowPowerThreshold = optimalPerfectShotThrowPower - 1.7f - GetHorizontalDistanceFromHoop() * 0.1f;
+        _highestPerfectThrowPowerThreshold = optimalPerfectShotThrowPower +
+                                             (optimalBackBoardShotThrowPower - optimalPerfectShotThrowPower) / 2f;
+        _highestBackBoardThrowPowerThreshold =
+            optimalBackBoardShotThrowPower + (3f - GetHorizontalDistanceFromHoop() * 0.1f);
         ThresholdsChangedEvent?.Invoke();
     }
 
@@ -171,6 +177,9 @@ public class PlayerController : MonoBehaviour
 
         optimalPerfectShotAngleRad = Utils.CalculateOptimalThrowAngleRad(ballThrowPosition);
         optimalPerfectShotThrowPower = Utils.CalculateOptimalThrowPower(ballThrowPosition, optimalPerfectShotAngleRad);
+        optimalBackBoardShotAngleRad = Utils.CalculateOptimalBackBoardThrowAngleRad(ballThrowPosition);
+        optimalBackBoardShotThrowPower =
+            Utils.CalculateOptimalBackBoardThrowPower(ballThrowPosition, optimalBackBoardShotAngleRad);
     }
 
     public void LookAtHoop()
@@ -210,6 +219,11 @@ public class PlayerController : MonoBehaviour
     public float GetLowestThrowPower()
     {
         return _lowestThrowPowerThreshold;
+    }
+
+    public float GetHighestPerfectThrowPower()
+    {
+        return _highestPerfectThrowPowerThreshold;
     }
 
     public float GetThrowPowerRange()

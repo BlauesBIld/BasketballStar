@@ -29,9 +29,11 @@ public class CameraController : MonoBehaviour
 
     void Start()
     {
+        RoundManager.Instance.RoundStartedEvent += BindToPlayer;
         RoundManager.Instance.RoundEndedEvent += UnbindFromPlayer;
         ResetPosition();
     }
+
     void ResetPosition()
     {
         transform.position = new Vector3(-8, 7, 0);
@@ -45,6 +47,7 @@ public class CameraController : MonoBehaviour
             RotateAroundFieldCenter();
         }
     }
+
     void RotateAroundFieldCenter()
     {
         Transform cameraTransform = transform;
@@ -52,40 +55,36 @@ public class CameraController : MonoBehaviour
         Vector3 centerOfPlayField = RoundManager.Instance.GetCenterOfPlayField();
         centerOfPlayField.y = 3f;
         cameraTransform.LookAt(centerOfPlayField);
-        float deltaDistance = Vector3.Distance(cameraTransform.position, centerOfPlayField) - _initialDistanceFromCenter;
+        float deltaDistance =
+            Vector3.Distance(cameraTransform.position, centerOfPlayField) - _initialDistanceFromCenter;
         cameraTransform.position += cameraTransform.forward * deltaDistance;
-
     }
 
     public void BindToPlayer()
     {
         PlayerController.Instance.ThrowStartedEvent += MoveBetweenPlayerAndHoop;
-        PlayerController.Instance.ThrowEndedEvent += SetPositionBehindPlayer;
         SetPositionBehindPlayer();
     }
 
     public void UnbindFromPlayer()
     {
         PlayerController.Instance.ThrowStartedEvent -= MoveBetweenPlayerAndHoop;
-        PlayerController.Instance.ThrowEndedEvent -= SetPositionBehindPlayer;
     }
 
-    void SetPositionBehindPlayer()
+    public void SetPositionBehindPlayer()
     {
-
-        Transform cameraTransform = transform;
         Transform playerTransform = PlayerController.Instance.transform;
         Vector3 playerPosition = playerTransform.position;
         playerPosition.y += 3f;
-        cameraTransform.position = playerPosition - playerTransform.forward * 6f;
-        cameraTransform.rotation = playerTransform.rotation;
+        transform.position = playerPosition - playerTransform.forward * 6f;
+        transform.rotation = playerTransform.rotation;
     }
 
     public void MoveBetweenPlayerAndHoop()
     {
         Vector3 hoopPosition = RoundManager.Instance.hoopCenter.position;
         Vector3 targetPosition = (transform.position - hoopPosition).normalized * _distanceFromHoop + hoopPosition;
-        targetPosition.y = hoopPosition.y + 1.5f;
+        targetPosition.y = hoopPosition.y;
         Vector3 targetUpPosition = transform.position + Vector3.up * 2f;
 
         StartCoroutine(MoveSequence(targetUpPosition, targetPosition));
@@ -93,11 +92,17 @@ public class CameraController : MonoBehaviour
 
     IEnumerator MoveSequence(Vector3 targetUpPosition, Vector3 targetPosition)
     {
-        yield return StartCoroutine(MoveToPosition(targetUpPosition, 0.5f));
+        float timeForThrow = Utils.CalculateTimeToReachHoop(PlayerController.Instance.transform.position,
+            PlayerController.Instance.optimalPerfectShotAngleRad);
+        targetPosition.y += 1f;
+        yield return StartCoroutine(MoveToPosition(targetUpPosition, timeForThrow * 0.7f));
 
-        yield return StartCoroutine(MoveToPosition(targetPosition, 1f));
+        float timeDifference = PlayerController.Instance.ShotFlyingTime - timeForThrow * 0.3f;
+        targetPosition.y += 3f;
+        yield return StartCoroutine(MoveToPosition(targetPosition, timeDifference));
+
+        SetPositionBehindPlayer();
     }
-
 
 
     IEnumerator MoveToPosition(Vector3 targetPosition, float duration)
@@ -108,14 +113,11 @@ public class CameraController : MonoBehaviour
         while (elapsed < duration)
         {
             float t = elapsed / duration;
-            float easeOutT = 1 - Mathf.Exp(-2 * t);
-            transform.position = Vector3.Lerp(startPosition, targetPosition, easeOutT);
+            transform.position = Vector3.Lerp(startPosition, targetPosition, t);
+            if (transform.position.y > RoundManager.Instance.hoopCenter.position.y)
+                transform.LookAt(RoundManager.Instance.hoopCenter.position);
             elapsed += Time.deltaTime;
             yield return null;
         }
-
-        transform.position = targetPosition;
     }
-
-
 }
