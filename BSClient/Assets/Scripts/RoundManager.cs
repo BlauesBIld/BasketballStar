@@ -15,7 +15,7 @@ public class RoundManager : MonoBehaviour
     private readonly float _maxPossibleDistanceFromCenterOfPlayField = 10f;
 
     private float _roundTime = 15f;
-    private bool _hasRoundEnded;
+    private bool _hasRoundEnded = true;
 
     private int _playerScore;
     public GameObject playerPrefab;
@@ -163,7 +163,7 @@ public class RoundManager : MonoBehaviour
 
     public int GetTimeLeft()
     {
-        return (int) (_roundTime - (Time.time - _roundStartTimeStamp));
+        return (int)(_roundTime - (Time.time - _roundStartTimeStamp));
     }
 
     public Dictionary<OpponentController, int> GetOpponents()
