@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 8734537559559592361}
   - component: {fileID: 3825421676686199050}
   - component: {fileID: 365612958719496496}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: ScoreCollider
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -67,7 +67,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 3772442337692350772}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: PositionAboveHead
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -103,7 +103,7 @@ GameObject:
   - component: {fileID: 2997862533240659862}
   - component: {fileID: 2997862533240659863}
   - component: {fileID: 7952514908250759301}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Ball
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -124,7 +124,7 @@ Transform:
   m_Children:
   - {fileID: 8734537559559592361}
   m_Father: {fileID: 7264931543309516927}
-  m_RootOrder: 0
+  m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!33 &2997862533240659864
 MeshFilter:
@@ -217,6 +217,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1d720138c47403f45af83ac126675bfe, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  owner: {fileID: 5122528072669148468}
+  positionAboveOwnerHead: {fileID: 3772442337692350772}
   defaultMaterial: {fileID: 13400000, guid: 2fc253a670cf6ec49b38d8856db06776, type: 2}
   noBounceMaterial: {fileID: 13400000, guid: fcf52ee58fa35e6449c8f343611dcb0d, type: 2}
 --- !u!1 &4232659346242744338
@@ -228,7 +230,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 7264931543309516927}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Player
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -247,8 +249,8 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 2997862533240659867}
   - {fileID: 3664796210516129372}
+  - {fileID: 2997862533240659867}
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -266,7 +268,7 @@ GameObject:
   - component: {fileID: 7769240672387320627}
   - component: {fileID: 5600433086399530984}
   - component: {fileID: 1916632542599788591}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Player
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -287,7 +289,7 @@ Transform:
   m_Children:
   - {fileID: 3772442337692350772}
   m_Father: {fileID: 7264931543309516927}
-  m_RootOrder: 1
+  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!33 &1361117144203522677
 MeshFilter:
@@ -383,5 +385,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   optimalPerfectShotThrowPower: 0
   optimalPerfectShotAngleRad: 0
+  optimalBackBoardShotThrowPower: 0
+  optimalBackBoardShotAngleRad: 0
   ballController: {fileID: 7952514908250759301}
   positionAboveHead: {fileID: 3772442337692350772}

@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 public enum BallStates
 {
@@ -12,6 +13,9 @@ public enum BallStates
 
 public class BallController : MonoBehaviour
 {
+    public GameObject owner;
+    public Transform positionAboveOwnerHead;
+
     public PhysicMaterial defaultMaterial;
     public PhysicMaterial noBounceMaterial;
     private readonly float _idleBounceForce = 10f;
@@ -29,21 +33,21 @@ public class BallController : MonoBehaviour
         _rigidbody.velocity = Vector3.zero;
         _rigidbody.angularVelocity = Vector3.zero;
         transform.rotation = Quaternion.identity;
-        SetPositionNextToPlayer();
+        SetPositionNextToOwner();
         ClearTouchedGameObjects();
     }
 
     private void Start()
     {
         _rigidbody = GetComponent<Rigidbody>();
-        SetPositionNextToPlayer();
+        SetPositionNextToOwner();
     }
 
     private void Update()
     {
         if (_ballState == BallStates.Dribbling) HandleIdleBouncing();
 
-        if (_ballState == BallStates.Throwing) HandlePositionAbovePlayer();
+        if (_ballState == BallStates.Throwing) HandlePositionAboveOwner();
     }
 
     public void OnTriggerEnter(Collider other)
@@ -71,17 +75,16 @@ public class BallController : MonoBehaviour
         }
     }
 
-    private void SetPositionNextToPlayer()
+    private void SetPositionNextToOwner()
     {
-        PlayerController player = PlayerController.Instance;
-        Vector3 ballPositionNextToPlayer = player.transform.position + player.transform.forward * 0.25f +
-                                           player.transform.right;
-        transform.position = ballPositionNextToPlayer;
+        Vector3 ballPositionNextToOwner = owner.transform.position + owner.transform.forward * 0.25f +
+                                          owner.transform.right;
+        transform.position = ballPositionNextToOwner;
     }
 
-    private void HandlePositionAbovePlayer()
+    private void HandlePositionAboveOwner()
     {
-        transform.position = PlayerController.Instance.positionAboveHead.position;
+        transform.position = positionAboveOwnerHead.position;
     }
 
     private void HandleIdleBouncing()
@@ -98,20 +101,20 @@ public class BallController : MonoBehaviour
     public void StartCharging()
     {
         _ballState = BallStates.Throwing;
-        MoveBallAbovePlayerInOneSecond();
+        MoveBallAboveOwnerInOneSecond();
     }
 
-    private void MoveBallAbovePlayerInOneSecond()
+    private void MoveBallAboveOwnerInOneSecond()
     {
         _rigidbody.isKinematic = true;
-        StartCoroutine(MoveBallAbovePlayer());
+        StartCoroutine(MoveBallAboveOwner());
     }
 
-    private IEnumerator MoveBallAbovePlayer()
+    private IEnumerator MoveBallAboveOwner()
     {
         var time = 0f;
         var duration = 1f;
-        Vector3 targetPosition = PlayerController.Instance.positionAboveHead.position;
+        Vector3 targetPosition = positionAboveOwnerHead.position;
         while (time < duration)
         {
             time += Time.deltaTime;
@@ -121,82 +124,17 @@ public class BallController : MonoBehaviour
         }
     }
 
-    public void Throw(float throwPower)
+    public void Throw(Vector3 forceVector)
     {
         _rigidbody.isKinematic = false;
         _ballState = BallStates.Flying;
 
-        var forceVector = CheckForThresholdsAndCalculateForceVector(ref throwPower, out var player);
-        _rigidbody.AddForce(forceVector * throwPower, ForceMode.Impulse);
+        _rigidbody.AddForce(forceVector, ForceMode.Impulse);
 
-        var torqueForce = throwPower * 14f;
-        Vector3 torqueDirection = -player.transform.right;
+        var torqueForce = forceVector.magnitude;
+        Vector3 torqueDirection = -owner.transform.right;
 
         _rigidbody.AddTorque(torqueDirection * torqueForce, ForceMode.Impulse);
-    }
-
-    private static Vector3 CheckForThresholdsAndCalculateForceVector(ref float throwPower, out PlayerController player)
-    {
-        float perfectShotOrBackBoardShotThreshold = PlayerController.Instance.GetHighestPerfectThrowPower();
-        float optimalShotAngleRad = 0f;
-        Vector3 hoopCenterPosition = RoundManager.Instance.hoopCenter.position;
-        hoopCenterPosition.y = 0;
-        Vector3 backBoardHoopCenterPosition = RoundManager.Instance.backBoardHoopCenter.position;
-        backBoardHoopCenterPosition.y = 0;
-        Vector3 playerPosition = PlayerController.Instance.transform.position;
-        playerPosition.y = 0;
-
-        Vector3 towardsDesiredHoop = Vector3.zero;
-
-        if (throwPower <= perfectShotOrBackBoardShotThreshold)
-        {
-            throwPower = CheckAndSetIfPerfectThrow(throwPower);
-            optimalShotAngleRad = PlayerController.Instance.optimalPerfectShotAngleRad;
-            towardsDesiredHoop = (hoopCenterPosition - playerPosition).normalized;
-        }
-        else
-        {
-            throwPower = CheckAndSetIfPerfectBackboardThrow(throwPower);
-            optimalShotAngleRad = PlayerController.Instance.optimalBackBoardShotAngleRad;
-            towardsDesiredHoop = (backBoardHoopCenterPosition - playerPosition).normalized;
-        }
-
-        player = PlayerController.Instance;
-        Vector3 forceVector = towardsDesiredHoop * Mathf.Cos(optimalShotAngleRad) +
-                              player.transform.up * Mathf.Sin(optimalShotAngleRad);
-        return forceVector;
-    }
-
-    private static float CheckAndSetIfPerfectBackboardThrow(float throwPower)
-    {
-        float maxPerfectBackBoardShotThreshold = PlayerController.Instance.optimalBackBoardShotThrowPower +
-                                                 PlayerController.Instance.PerfectBackBoardShotThreshold;
-        float minPerfectBackBoardShotThreshold = PlayerController.Instance.optimalBackBoardShotThrowPower -
-                                                 PlayerController.Instance.PerfectBackBoardShotThreshold;
-
-        if (throwPower < maxPerfectBackBoardShotThreshold && throwPower > minPerfectBackBoardShotThreshold)
-        {
-            Debug.Log("Perfect Backboard shot!");
-            throwPower = PlayerController.Instance.optimalBackBoardShotThrowPower;
-        }
-
-        return throwPower;
-    }
-
-    private static float CheckAndSetIfPerfectThrow(float throwPower)
-    {
-        float maxPerfectShotThreshold = PlayerController.Instance.optimalPerfectShotThrowPower +
-                                        PlayerController.Instance.PerfectShotThreshold;
-        float minPerfectShotThreshold = PlayerController.Instance.optimalPerfectShotThrowPower -
-                                        PlayerController.Instance.PerfectShotThreshold;
-
-        if (throwPower < maxPerfectShotThreshold && throwPower > minPerfectShotThreshold)
-        {
-            Debug.Log("Perfect shot!");
-            throwPower = PlayerController.Instance.optimalPerfectShotThrowPower;
-        }
-
-        return throwPower;
     }
 
     public HashSet<GameObject> GetTouchedGameObjects()

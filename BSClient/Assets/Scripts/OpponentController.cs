@@ -4,15 +4,11 @@ using UnityEngine;
 
 public class OpponentController : MonoBehaviour
 {
-    // Start is called before the first frame update
-    void Start()
-    {
-        
-    }
+    public BallController ballController;
+    public Transform positionAboveHead;
 
-    // Update is called once per frame
-    void Update()
+    public void SetName(string name)
     {
-        
+        gameObject.name = name;
     }
 }

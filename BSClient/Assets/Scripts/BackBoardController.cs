@@ -47,13 +47,11 @@ public class BackBoardController : MonoBehaviour
     private void StartGlowing()
     {
         backBoardGlow.SetActive(true);
-        Debug.Log("Started Glowing!");
     }
 
     private void StopGlowing()
     {
         backBoardGlow.SetActive(false);
-        Debug.Log("Stopped Glowing!");
     }
 
     public void SetRandomGlowTime()
@@ -64,9 +62,6 @@ public class BackBoardController : MonoBehaviour
 
         glowDuration = UnityEngine.Random.Range(minGlowDuration, maxGlowDuration);
         glowStartTime = UnityEngine.Random.Range(0, maxRoundTime - glowDuration);
-
-        Debug.Log("Glow Duration: " + glowDuration);
-        Debug.Log("Glow Start Time: " + glowStartTime);
     }
 
     public bool IsGlowing()

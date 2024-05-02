@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
@@ -14,12 +15,12 @@ public class RoundManager : MonoBehaviour
     private readonly float _maxPossibleDistanceFromCenterOfPlayField = 10f;
 
     private float _roundTime = 15f;
-    private bool _isRoundActive;
+    private bool _hasRoundEnded;
 
     private int _playerScore;
     public GameObject playerPrefab;
     public GameObject opponentPrefab;
-    private List<OpponentController> _opponents = new List<OpponentController>();
+    private Dictionary<OpponentController, int> _opponents = new Dictionary<OpponentController, int>();
 
     private float _playerShotCounter;
     private float _roundStartTimeStamp;
@@ -44,7 +45,7 @@ public class RoundManager : MonoBehaviour
 
     private void Update()
     {
-        if (_isRoundActive) IngameUIManager.Instance.UpdateTimer(GetTimeLeft());
+        if (IsRoundActive()) IngameUIManager.Instance.UpdateTimer(GetTimeLeft());
     }
 
     public event OnPlayerScoreChanged PlayerScoreChangedEvent;
@@ -53,8 +54,7 @@ public class RoundManager : MonoBehaviour
     public void StartRound()
     {
         InstantiatePlayer();
-        RoundStartedEvent += PlayerController.Instance.ResetShot;
-        _isRoundActive = true;
+        _hasRoundEnded = false;
         _playerScore = 0;
         AssignPlayerToRandomPosition();
         StartCoroutine(EndGameAfterTime());
@@ -73,13 +73,60 @@ public class RoundManager : MonoBehaviour
         while (Time.time - _roundStartTimeStamp < _roundTime)
             yield return null;
 
-        while (!PlayerController.Instance.ballController.IsDribbling())
+        while (!PlayerController.Instance.ballController.IsDribbling() || !CheckIfOpponentsBallsAreDribbling())
             yield return null;
 
-        SetPlayerCardValue();
+        SetupEndOfRoundScreen();
         ShowEndOfRoundScreen();
-        _isRoundActive = false;
+        _hasRoundEnded = true;
         RoundEndedEvent?.Invoke();
+    }
+
+    public void ClearDictionaryAndDestroyOpponents()
+    {
+        foreach (var opponent in _opponents.Keys)
+        {
+            Destroy(opponent.transform.parent.gameObject);
+        }
+
+        _opponents.Clear();
+    }
+
+    private void SetupEndOfRoundScreen()
+    {
+        SetPlayerCardValue();
+        SetOpponentsCardValues();
+
+        if (_opponents.Count == 1)
+        {
+            if (_opponents.Values.First() > _playerScore)
+                EndOfRoundScreenController.Instance.ChangeTitleText("You lost!");
+            else
+                EndOfRoundScreenController.Instance.ChangeTitleText("You won!");
+        }
+    }
+
+    private void SetOpponentsCardValues()
+    {
+        foreach (var opponent in _opponents.Keys)
+        {
+            EndOfRoundScreenController.Instance.InstantiateOpponentCard(opponent.name, _opponents[opponent]);
+        }
+    }
+
+    private bool CheckIfOpponentsBallsAreDribbling()
+    {
+        if (_opponents.Count == 0)
+        {
+            return true;
+        }
+
+        foreach (var opponent in _opponents.Keys)
+        {
+            if (!opponent.ballController.IsDribbling()) return false;
+        }
+
+        return true;
     }
 
     private void SetPlayerCardValue()
@@ -119,14 +166,14 @@ public class RoundManager : MonoBehaviour
         return (int) (_roundTime - (Time.time - _roundStartTimeStamp));
     }
 
-    public List<OpponentController> GetOpponents()
+    public Dictionary<OpponentController, int> GetOpponents()
     {
         return _opponents;
     }
 
     public bool IsRoundActive()
     {
-        return _isRoundActive;
+        return Time.time - _roundStartTimeStamp < _roundTime;
     }
 
     public Vector3 GetCenterOfPlayField()
@@ -144,5 +191,28 @@ public class RoundManager : MonoBehaviour
     public float SetRoundTime(float time)
     {
         return _roundTime = time;
+    }
+
+    public void AddPointsToOpponent(OpponentController opponent, int points)
+    {
+        _opponents[opponent] += points;
+    }
+
+    public void AddAIOpponent(OpponentController opponent)
+    {
+        _opponents.Add(opponent, 0);
+    }
+
+    public Vector3 GetRandomPositionOnField()
+    {
+        return new Vector3(
+            Random.Range(0, _maxPossibleDistanceFromCenterOfPlayField),
+            2,
+            Random.Range(-_maxPossibleDistanceFromCenterOfPlayField, _maxPossibleDistanceFromCenterOfPlayField));
+    }
+
+    public bool HasRoundEnded()
+    {
+        return _hasRoundEnded;
     }
 }

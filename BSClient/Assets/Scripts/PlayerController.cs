@@ -38,6 +38,7 @@ public class PlayerController : MonoBehaviour
         if (Instance == null)
         {
             Instance = this;
+            RoundManager.Instance.RoundStartedEvent += ResetShot;
         }
         else
         {
@@ -167,7 +168,65 @@ public class PlayerController : MonoBehaviour
     {
         ThrowStartedEvent?.Invoke();
         var throwForce = Utils.ConvertSwipeDistanceToThrowPower(_currentSwipeDistance);
-        ballController.Throw(throwForce);
+        Vector3 throwForceVector = CheckForThresholdsAndCalculateForceVector(throwForce);
+        ballController.Throw(throwForceVector);
+    }
+
+    private Vector3 CheckForThresholdsAndCalculateForceVector(float throwPower)
+    {
+        float perfectShotOrBackBoardShotThreshold = GetHighestPerfectThrowPower();
+        float optimalShotAngleRad = 0f;
+        Vector3 hoopCenterPosition = RoundManager.Instance.hoopCenter.position;
+        hoopCenterPosition.y = 0;
+        Vector3 backBoardHoopCenterPosition = RoundManager.Instance.backBoardHoopCenter.position;
+        backBoardHoopCenterPosition.y = 0;
+        Vector3 playerPosition = transform.position;
+        playerPosition.y = 0;
+
+        Vector3 towardsDesiredHoop = Vector3.zero;
+
+        if (throwPower <= perfectShotOrBackBoardShotThreshold)
+        {
+            throwPower = CheckAndSetIfPerfectThrow(throwPower);
+            optimalShotAngleRad = optimalPerfectShotAngleRad;
+            towardsDesiredHoop = (hoopCenterPosition - playerPosition).normalized;
+        }
+        else
+        {
+            throwPower = CheckAndSetIfPerfectBackboardThrow(throwPower);
+            optimalShotAngleRad = optimalBackBoardShotAngleRad;
+            towardsDesiredHoop = (backBoardHoopCenterPosition - playerPosition).normalized;
+        }
+
+        Vector3 forceVector = towardsDesiredHoop * Mathf.Cos(optimalShotAngleRad) +
+                              transform.up * Mathf.Sin(optimalShotAngleRad);
+        return forceVector * throwPower;
+    }
+
+    private float CheckAndSetIfPerfectBackboardThrow(float throwPower)
+    {
+        float maxPerfectBackBoardShotThreshold = optimalBackBoardShotThrowPower + PerfectBackBoardShotThreshold;
+        float minPerfectBackBoardShotThreshold = optimalBackBoardShotThrowPower - PerfectBackBoardShotThreshold;
+
+        if (throwPower < maxPerfectBackBoardShotThreshold && throwPower > minPerfectBackBoardShotThreshold)
+        {
+            throwPower = optimalBackBoardShotThrowPower;
+        }
+
+        return throwPower;
+    }
+
+    private float CheckAndSetIfPerfectThrow(float throwPower)
+    {
+        float maxPerfectShotThreshold = optimalPerfectShotThrowPower + PerfectShotThreshold;
+        float minPerfectShotThreshold = optimalPerfectShotThrowPower - PerfectShotThreshold;
+
+        if (throwPower < maxPerfectShotThreshold && throwPower > minPerfectShotThreshold)
+        {
+            throwPower = optimalPerfectShotThrowPower;
+        }
+
+        return throwPower;
     }
 
     private void CalculateAndSetOptimalThrowValues()

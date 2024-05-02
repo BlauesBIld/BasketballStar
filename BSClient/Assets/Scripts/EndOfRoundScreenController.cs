@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 
 public class EndOfRoundScreenController : MonoBehaviour
@@ -8,6 +9,9 @@ public class EndOfRoundScreenController : MonoBehaviour
 
     public GameObject playerResultCard;
     public GameObject playersPanel;
+    public TextMeshProUGUI titleText;
+
+    public GameObject playerCardPrefab;
 
     private List<GameObject> _playerCards;
 
@@ -39,6 +43,22 @@ public class EndOfRoundScreenController : MonoBehaviour
         {
             Destroy(PlayerController.Instance.transform.parent.gameObject);
         }
+
+        RoundManager.Instance.ClearDictionaryAndDestroyOpponents();
+
+        ChangeTitleText("Game Over!");
         gameObject.SetActive(false);
+    }
+
+    public void InstantiateOpponentCard(string opponentName, int score)
+    {
+        var opponentCard = Instantiate(playerCardPrefab, playersPanel.transform);
+        opponentCard.transform.localScale *= 0.8f;
+        opponentCard.GetComponent<ResultCardController>().SetResultCardValues(opponentName, score);
+    }
+
+    public void ChangeTitleText(string text)
+    {
+        titleText.text = text;
     }
 }

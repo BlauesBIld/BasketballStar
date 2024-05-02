@@ -42,7 +42,7 @@ public class CameraController : MonoBehaviour
 
     void Update()
     {
-        if (!RoundManager.Instance.IsRoundActive())
+        if (RoundManager.Instance.HasRoundEnded())
         {
             RotateAroundFieldCenter();
         }
