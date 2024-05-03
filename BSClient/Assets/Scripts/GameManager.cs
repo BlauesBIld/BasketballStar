@@ -24,6 +24,12 @@ public class GameManager : MonoBehaviour
         }
     }
 
+    private void Start()
+    {
+        Application.targetFrameRate = 60;
+        QualitySettings.vSyncCount = 0;
+    }
+
     private void IgnorePlayerAndOpponentLayerCollisions()
     {
         Physics.IgnoreLayerCollision(LayerMask.NameToLayer("Player"), LayerMask.NameToLayer("Opponent"), true);

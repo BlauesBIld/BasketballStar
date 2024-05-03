@@ -45,7 +45,7 @@ public class RoundManager : MonoBehaviour
 
     private void Update()
     {
-        if (IsRoundActive()) IngameUIManager.Instance.UpdateTimer(GetTimeLeft());
+        if (IsRoundActive()) IngameUIController.Instance.UpdateTimer(GetTimeLeft());
     }
 
     public event OnPlayerScoreChanged PlayerScoreChangedEvent;
@@ -101,6 +101,8 @@ public class RoundManager : MonoBehaviour
         {
             if (_opponents.Values.First() > _playerScore)
                 EndOfRoundScreenController.Instance.ChangeTitleText("You lost!");
+            else if (_opponents.Values.First() == _playerScore)
+                EndOfRoundScreenController.Instance.ChangeTitleText("Draw!");
             else
                 EndOfRoundScreenController.Instance.ChangeTitleText("You won!");
         }
@@ -163,7 +165,7 @@ public class RoundManager : MonoBehaviour
 
     public int GetTimeLeft()
     {
-        return (int)(_roundTime - (Time.time - _roundStartTimeStamp));
+        return (int) (_roundTime - (Time.time - _roundStartTimeStamp));
     }
 
     public Dictionary<OpponentController, int> GetOpponents()
