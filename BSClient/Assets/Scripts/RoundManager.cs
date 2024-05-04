@@ -12,9 +12,9 @@ public class RoundManager : MonoBehaviour
     public Transform hoopCenter;
     public Transform backBoardHoopCenter;
 
-    private readonly float _maxPossibleDistanceFromCenterOfPlayField = 10f;
+    private readonly float _maxPossibleDistanceFromCenterOfPlayField = 5f;
 
-    private float _roundTime = 15f;
+    private float _roundTime = 150f;
     private bool _hasRoundEnded = true;
 
     private int _playerScore;
@@ -144,7 +144,7 @@ public class RoundManager : MonoBehaviour
 
     private void AssignPlayerToRandomPosition()
     {
-        var randomPosition = new Vector3(Random.Range(0, _maxPossibleDistanceFromCenterOfPlayField), 2,
+        var randomPosition = new Vector3(Random.Range(5f, 5f + _maxPossibleDistanceFromCenterOfPlayField), 0,
             Random.Range(-_maxPossibleDistanceFromCenterOfPlayField, _maxPossibleDistanceFromCenterOfPlayField));
         PlayerController.Instance.transform.position = randomPosition;
         PlayerController.Instance.LookAtHoop();
@@ -209,7 +209,7 @@ public class RoundManager : MonoBehaviour
     {
         return new Vector3(
             Random.Range(0, _maxPossibleDistanceFromCenterOfPlayField),
-            2,
+            0,
             Random.Range(-_maxPossibleDistanceFromCenterOfPlayField, _maxPossibleDistanceFromCenterOfPlayField));
     }
 

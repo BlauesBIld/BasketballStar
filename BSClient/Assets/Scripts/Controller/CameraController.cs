@@ -8,7 +8,7 @@ public class CameraController : MonoBehaviour
     public static CameraController Instance { get; private set; }
 
     private float _initialDistanceFromCenter = 0f;
-    private float _distanceFromHoop = 10f;
+    private float _distanceFromHoop = 8f;
 
     private Vector3 _moveVelocity = Vector3.zero;
     private float _smoothTime = 2f;
@@ -75,7 +75,7 @@ public class CameraController : MonoBehaviour
     {
         Transform playerTransform = PlayerController.Instance.transform;
         Vector3 playerPosition = playerTransform.position;
-        playerPosition.y += 3f;
+        playerPosition.y += 2.5f;
         transform.position = playerPosition - playerTransform.forward * 6f;
         transform.rotation = playerTransform.rotation;
     }
@@ -85,7 +85,7 @@ public class CameraController : MonoBehaviour
         Vector3 hoopPosition = RoundManager.Instance.hoopCenter.position;
         Vector3 targetPosition = (transform.position - hoopPosition).normalized * _distanceFromHoop + hoopPosition;
         targetPosition.y = hoopPosition.y;
-        Vector3 targetUpPosition = transform.position + Vector3.up * 2f;
+        Vector3 targetUpPosition = transform.position + Vector3.up * 1f;
 
         StartCoroutine(MoveSequence(targetUpPosition, targetPosition));
     }

@@ -21,11 +21,15 @@ public class Utils
     {
         Vector3 backboardRingCenterPosition = RoundManager.Instance.backBoardHoopCenter.position;
 
+        float ballRadius = PlayerController.Instance.ballController.GetBallRadius();
+        Debug.Log("Ball radius: " + ballRadius);
+        ballThrowPosition.y -= ballRadius;
+
         float horizontalDistance = Vector3.Distance(new Vector3(ballThrowPosition.x, 0, ballThrowPosition.z),
             new Vector3(backboardRingCenterPosition.x, 0, backboardRingCenterPosition.z));
         float verticalDistance = backboardRingCenterPosition.y - ballThrowPosition.y;
 
-        float minimumAngleRad = 45f * Mathf.Deg2Rad;
+        float minimumAngleRad = 40f * Mathf.Deg2Rad;
         return Mathf.Atan(2 * verticalDistance / horizontalDistance + Mathf.Tan(minimumAngleRad));
     }
 

@@ -11,8 +11,8 @@ public class PlayerController : MonoBehaviour
     public float optimalBackBoardShotThrowPower;
     public float optimalBackBoardShotAngleRad;
 
-    public float PerfectShotThreshold { get; } = 0.22f;
-    public float PerfectBackBoardShotThreshold { get; } = 0.13f;
+    public float PerfectShotThreshold { get; } = 0.08f;
+    public float PerfectBackBoardShotThreshold { get; } = 0.05f;
     public float ShotFlyingTime { get; } = 2f;
 
     private float _lowestThrowPowerThreshold;
@@ -22,7 +22,7 @@ public class PlayerController : MonoBehaviour
     public BallController ballController;
     public Transform positionAboveHead;
 
-    private readonly float _jumpForce = 8f;
+    private readonly float _jumpForce = 3f;
     private float _currentSwipeDistance;
     private float? _firstSwipeDirection;
     private float _initialTouchPosition;
@@ -143,11 +143,14 @@ public class PlayerController : MonoBehaviour
 
     private void SetThresholds()
     {
-        _lowestThrowPowerThreshold = optimalPerfectShotThrowPower - 1.7f - GetHorizontalDistanceFromHoop() * 0.1f;
+        _lowestThrowPowerThreshold = optimalPerfectShotThrowPower - 1f;
         _highestPerfectThrowPowerThreshold = optimalPerfectShotThrowPower +
                                              (optimalBackBoardShotThrowPower - optimalPerfectShotThrowPower) / 2f;
-        _highestBackBoardThrowPowerThreshold =
-            optimalBackBoardShotThrowPower + (3f - GetHorizontalDistanceFromHoop() * 0.1f);
+        _highestBackBoardThrowPowerThreshold = optimalBackBoardShotThrowPower + 0.5f;
+        Debug.Log("Lowest throw power: " + _lowestThrowPowerThreshold);
+        Debug.Log("Highest perfect throw power: " + _highestPerfectThrowPowerThreshold);
+        Debug.Log("Highest backboard throw power: " + _highestBackBoardThrowPowerThreshold);
+        Debug.Log("Optimal perfect shot throw power: " + optimalPerfectShotThrowPower);
         ThresholdsChangedEvent?.Invoke();
     }
 
@@ -173,7 +176,6 @@ public class PlayerController : MonoBehaviour
 
     private Vector3 CheckForThresholdsAndCalculateForceVector(float throwPower)
     {
-        float perfectShotOrBackBoardShotThreshold = GetHighestPerfectThrowPower();
         float optimalShotAngleRad = 0f;
         Vector3 hoopCenterPosition = RoundManager.Instance.hoopCenter.position;
         hoopCenterPosition.y = 0;
@@ -184,7 +186,7 @@ public class PlayerController : MonoBehaviour
 
         Vector3 towardsDesiredHoop = Vector3.zero;
 
-        if (throwPower <= perfectShotOrBackBoardShotThreshold)
+        if (throwPower <= GetHighestPerfectThrowPower())
         {
             throwPower = CheckAndSetIfPerfectThrow(throwPower);
             optimalShotAngleRad = optimalPerfectShotAngleRad;
@@ -209,6 +211,7 @@ public class PlayerController : MonoBehaviour
 
         if (throwPower < maxPerfectBackBoardShotThreshold && throwPower > minPerfectBackBoardShotThreshold)
         {
+            Debug.Log("Perfect backboard shot!");
             throwPower = optimalBackBoardShotThrowPower;
         }
 
@@ -222,6 +225,7 @@ public class PlayerController : MonoBehaviour
 
         if (throwPower < maxPerfectShotThreshold && throwPower > minPerfectShotThreshold)
         {
+            Debug.Log("Perfect shot!");
             throwPower = optimalPerfectShotThrowPower;
         }
 

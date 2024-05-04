@@ -18,7 +18,7 @@ public class BallController : MonoBehaviour
 
     public PhysicMaterial defaultMaterial;
     public PhysicMaterial noBounceMaterial;
-    private readonly float _idleBounceForce = 10f;
+    private readonly float _idleBounceForce = 3f;
     private BallStates _ballState = BallStates.Dribbling;
     private float _lastBallYVelocity;
 
@@ -78,7 +78,7 @@ public class BallController : MonoBehaviour
     private void SetPositionNextToOwner()
     {
         Vector3 ballPositionNextToOwner = owner.transform.position + owner.transform.forward * 0.25f +
-                                          owner.transform.right;
+                                          owner.transform.right * 0.5f;
         transform.position = ballPositionNextToOwner;
     }
 
@@ -150,5 +150,10 @@ public class BallController : MonoBehaviour
     private void ClearTouchedGameObjects()
     {
         _touchedGameObjects.Clear();
+    }
+
+    public float GetBallRadius()
+    {
+        return GetComponent<SphereCollider>().radius * transform.localScale.x;
     }
 }
