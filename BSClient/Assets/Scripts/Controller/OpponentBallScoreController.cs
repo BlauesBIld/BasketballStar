@@ -18,7 +18,7 @@ public class OpponentBallScoreController : MonoBehaviour
             else
             {
                 if (BackBoardController.Instance.IsGlowing() && opponentBall.GetTouchedGameObjects()
-                        .Contains(BackBoardController.Instance.gameObject))
+                    .Contains(BackBoardController.Instance.gameObject))
                 {
                     points = 5;
                     //TODO: Add effects for backboard shot while it glows
@@ -34,6 +34,7 @@ public class OpponentBallScoreController : MonoBehaviour
             {
                 RoundManager.Instance.AddPointsToOpponent(opponentBall.owner.GetComponent<OpponentController>(),
                     points);
+
             }
         }
     }

@@ -11,6 +11,7 @@ public class BackBoardController : MonoBehaviour
     public float glowStartTime = 0f;
 
     public GameObject backBoardGlow;
+    public GameObject backBoardOuterGlow;
 
     private void Awake()
     {
@@ -67,5 +68,29 @@ public class BackBoardController : MonoBehaviour
     public bool IsGlowing()
     {
         return backBoardGlow.activeSelf;
+    }
+
+    void OnCollisionEnter(Collision collision)
+    {
+        if (collision.gameObject.CompareTag("Ball"))
+        {
+            if (IsGlowing() && CheckIfBallDidNotTouchHoop(collision) && collision.transform.position.y > HoopController.Instance.hoopCenter.position.y)
+            {
+                backBoardOuterGlow.SetActive(true);
+                StartCoroutine(StopOuterGlowAfterHalfASecond());
+            }
+        }
+    }
+    static bool CheckIfBallDidNotTouchHoop(Collision collision)
+    {
+        return !collision.gameObject.GetComponent<BallController>().GetTouchedGameObjects().Contains(HoopController.Instance.gameObject);
+    }
+    IEnumerator StopOuterGlowAfterHalfASecond()
+    {
+        yield return new WaitForSeconds(0.5f);
+        if (backBoardOuterGlow.activeSelf)
+        {
+            backBoardOuterGlow.SetActive(false);
+        }
     }
 }

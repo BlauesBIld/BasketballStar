@@ -8,7 +8,7 @@ public class AIController : MonoBehaviour
 {
     public Transform positionAboveHead;
 
-    private float _jumpForce = 8f;
+    private float _jumpForce = 3f;
     public float ShotFlyingTime { get; } = 2f;
 
     public float optimalPerfectShotThrowPower;
@@ -19,7 +19,7 @@ public class AIController : MonoBehaviour
     private float _maxDelayBeforeThrow = 1.5f;
     private float _minDelayBeforeThrow = 0.5f;
 
-    private float _maxErrorPower = 0.5f;
+    private float _maxErrorPower = 0.1f;
 
     private void Awake()
     {
@@ -70,14 +70,14 @@ public class AIController : MonoBehaviour
     private void ThrowBall()
     {
         var throwPower = optimalPerfectShotThrowPower + Random.Range(-_maxErrorPower, _maxErrorPower);
-        Vector3 hoopPosition = RoundManager.Instance.hoopCenter.position;
+        Vector3 hoopPosition = HoopController.Instance.hoopCenter.position;
         hoopPosition.y = 0;
         Vector3 opponentPosition = transform.position;
         opponentPosition.y = 0;
 
         Vector3 towardsDesiredHoop = (hoopPosition - opponentPosition).normalized;
         Vector3 throwVector = towardsDesiredHoop * Mathf.Cos(optimalPerfectShotAngleRad) +
-                              transform.up * Mathf.Sin(optimalPerfectShotAngleRad);
+            transform.up * Mathf.Sin(optimalPerfectShotAngleRad);
         GetComponent<OpponentController>().ballController.Throw(throwVector * throwPower);
     }
 
@@ -104,7 +104,7 @@ public class AIController : MonoBehaviour
     {
         Vector3 randomPosition = RoundManager.Instance.GetRandomPositionOnField();
         transform.position = randomPosition;
-        Vector3 hoopPosition = RoundManager.Instance.hoopCenter.position;
+        Vector3 hoopPosition = HoopController.Instance.hoopCenter.position;
         hoopPosition.y = transform.position.y;
         transform.LookAt(hoopPosition);
     }

@@ -30,6 +30,12 @@ public class PlayerController : MonoBehaviour
     private bool _isChargingThrow = true;
 
     private Rigidbody _rigidbody;
+
+    public event OnCurrentSwipeDistanceChanged CurrentSwipeDistanceChangedEvent;
+    public event Action ThrowEndedEvent;
+    public event Action ThrowStartedEvent;
+    public event Action ThresholdsChangedEvent;
+
     public static PlayerController Instance { get; private set; }
 
     private void Awake()
@@ -49,18 +55,14 @@ public class PlayerController : MonoBehaviour
     private void Start()
     {
         _rigidbody = GetComponent<Rigidbody>();
-        ThrowEndedEvent += RoundManager.Instance.PlayerShot;
+        ThrowStartedEvent += RoundManager.Instance.AddToPlayerShotCounter;
+        ThrowEndedEvent += RoundManager.Instance.AssignPlayerToNewPositionOnEvenShotCounter;
     }
 
     private void Update()
     {
         HandleSwipeUp();
     }
-
-    public event OnCurrentSwipeDistanceChanged CurrentSwipeDistanceChangedEvent;
-    public event Action ThrowEndedEvent;
-    public event Action ThrowStartedEvent;
-    public event Action ThresholdsChangedEvent;
 
     private void HandleSwipeUp()
     {
@@ -145,18 +147,14 @@ public class PlayerController : MonoBehaviour
     {
         _lowestThrowPowerThreshold = optimalPerfectShotThrowPower - 1f;
         _highestPerfectThrowPowerThreshold = optimalPerfectShotThrowPower +
-                                             (optimalBackBoardShotThrowPower - optimalPerfectShotThrowPower) / 2f;
+            (optimalBackBoardShotThrowPower - optimalPerfectShotThrowPower) / 2f;
         _highestBackBoardThrowPowerThreshold = optimalBackBoardShotThrowPower + 0.5f;
-        Debug.Log("Lowest throw power: " + _lowestThrowPowerThreshold);
-        Debug.Log("Highest perfect throw power: " + _highestPerfectThrowPowerThreshold);
-        Debug.Log("Highest backboard throw power: " + _highestBackBoardThrowPowerThreshold);
-        Debug.Log("Optimal perfect shot throw power: " + optimalPerfectShotThrowPower);
         ThresholdsChangedEvent?.Invoke();
     }
 
     private float GetHorizontalDistanceFromCenterToHoop()
     {
-        var hoopPosition = RoundManager.Instance.hoopCenter.position;
+        var hoopPosition = HoopController.Instance.hoopCenter.position;
         return new Vector3(hoopPosition.x, 0, hoopPosition.z)
             .magnitude;
     }
@@ -177,9 +175,9 @@ public class PlayerController : MonoBehaviour
     private Vector3 CheckForThresholdsAndCalculateForceVector(float throwPower)
     {
         float optimalShotAngleRad = 0f;
-        Vector3 hoopCenterPosition = RoundManager.Instance.hoopCenter.position;
+        Vector3 hoopCenterPosition = HoopController.Instance.hoopCenter.position;
         hoopCenterPosition.y = 0;
-        Vector3 backBoardHoopCenterPosition = RoundManager.Instance.backBoardHoopCenter.position;
+        Vector3 backBoardHoopCenterPosition = HoopController.Instance.backBoardHoopCenter.position;
         backBoardHoopCenterPosition.y = 0;
         Vector3 playerPosition = transform.position;
         playerPosition.y = 0;
@@ -200,7 +198,7 @@ public class PlayerController : MonoBehaviour
         }
 
         Vector3 forceVector = towardsDesiredHoop * Mathf.Cos(optimalShotAngleRad) +
-                              transform.up * Mathf.Sin(optimalShotAngleRad);
+            transform.up * Mathf.Sin(optimalShotAngleRad);
         return forceVector * throwPower;
     }
 
@@ -246,7 +244,7 @@ public class PlayerController : MonoBehaviour
 
     public void LookAtHoop()
     {
-        Vector3 hoopCenterPosition = RoundManager.Instance.hoopCenter.position;
+        Vector3 hoopCenterPosition = HoopController.Instance.hoopCenter.position;
         Vector3 lookAtPosition = new Vector3(hoopCenterPosition.x, transform.position.y,
             hoopCenterPosition.z);
         transform.LookAt(lookAtPosition);
@@ -254,7 +252,7 @@ public class PlayerController : MonoBehaviour
 
     public float GetHorizontalDistanceFromHoop()
     {
-        Vector3 hoopCenterPosition = RoundManager.Instance.hoopCenter.position;
+        Vector3 hoopCenterPosition = HoopController.Instance.hoopCenter.position;
         Vector3 throwPosition = positionAboveHead.position;
         return Vector3.Distance(new Vector3(throwPosition.x, 0, throwPosition.z),
             new Vector3(hoopCenterPosition.x, 0, hoopCenterPosition.z));
@@ -263,7 +261,7 @@ public class PlayerController : MonoBehaviour
     public float GetHorizontalDistanceFromBackBoardHoop()
     {
         var ballThrowPosition = positionAboveHead.position;
-        var hoopCenterPosition = RoundManager.Instance.backBoardHoopCenter.position;
+        var hoopCenterPosition = HoopController.Instance.backBoardHoopCenter.position;
         return Vector3.Distance(new Vector3(ballThrowPosition.x, 0, ballThrowPosition.z),
             new Vector3(hoopCenterPosition.x, 0, hoopCenterPosition.z));
     }

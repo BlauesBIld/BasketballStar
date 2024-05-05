@@ -69,6 +69,7 @@ public class CameraController : MonoBehaviour
     public void UnbindFromPlayer()
     {
         PlayerController.Instance.ThrowStartedEvent -= MoveBetweenPlayerAndHoop;
+        ResetPosition();
     }
 
     public void SetPositionBehindPlayer()
@@ -82,7 +83,7 @@ public class CameraController : MonoBehaviour
 
     public void MoveBetweenPlayerAndHoop()
     {
-        Vector3 hoopPosition = RoundManager.Instance.hoopCenter.position;
+        Vector3 hoopPosition = HoopController.Instance.hoopCenter.position;
         Vector3 targetPosition = (transform.position - hoopPosition).normalized * _distanceFromHoop + hoopPosition;
         targetPosition.y = hoopPosition.y;
         Vector3 targetUpPosition = transform.position + Vector3.up * 1f;
@@ -114,8 +115,8 @@ public class CameraController : MonoBehaviour
         {
             float t = elapsed / duration;
             transform.position = Vector3.Lerp(startPosition, targetPosition, t);
-            if (transform.position.y > RoundManager.Instance.hoopCenter.position.y)
-                transform.LookAt(RoundManager.Instance.hoopCenter.position);
+            if (transform.position.y > HoopController.Instance.hoopCenter.position.y)
+                transform.LookAt(HoopController.Instance.hoopCenter.position);
             elapsed += Time.deltaTime;
             yield return null;
         }

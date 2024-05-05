@@ -7,24 +7,28 @@ using Random = UnityEngine.Random;
 
 public class RoundManager : MonoBehaviour
 {
-    public delegate void OnPlayerScoreChanged(int points);
-
-    public Transform hoopCenter;
-    public Transform backBoardHoopCenter;
+    public delegate void OnPlayerScoreChanged(int addedPoints);
+    public delegate void OnOpponentScoreChanged(OpponentController opponent, int addedPoints);
 
     private readonly float _maxPossibleDistanceFromCenterOfPlayField = 5f;
 
-    private float _roundTime = 150f;
+    private float _roundTime = 60f;
     private bool _hasRoundEnded = true;
 
     private int _playerScore;
     public GameObject playerPrefab;
     public GameObject opponentPrefab;
-    private Dictionary<OpponentController, int> _opponents = new Dictionary<OpponentController, int>();
+    private readonly Dictionary<OpponentController, int> _opponentsAndScores = new Dictionary<OpponentController, int>();
 
-    private float _playerShotCounter;
+    private int _playerShotCounter;
     private float _roundStartTimeStamp;
 
+    public int consecutiveGoals = 0;
+    private int _lastShotPlayerScored = 0;
+    private bool _fireBallBonusActive = false;
+
+    public event OnPlayerScoreChanged PlayerScoreChangedEvent;
+    public event OnOpponentScoreChanged OpponentScoreChangedEvent;
     public event Action RoundEndedEvent;
     public event Action RoundStartedEvent;
 
@@ -48,18 +52,24 @@ public class RoundManager : MonoBehaviour
         if (IsRoundActive()) IngameUIController.Instance.UpdateTimer(GetTimeLeft());
     }
 
-    public event OnPlayerScoreChanged PlayerScoreChangedEvent;
-
 
     public void StartRound()
     {
         InstantiatePlayer();
-        _hasRoundEnded = false;
-        _playerScore = 0;
+        ResetVariableValues();
         AssignPlayerToRandomPosition();
         StartCoroutine(EndGameAfterTime());
         RoundStartedEvent?.Invoke();
-        PlayerScoreChangedEvent?.Invoke(_playerScore);
+        PlayerScoreChangedEvent?.Invoke(0);
+    }
+    void ResetVariableValues()
+    {
+        _hasRoundEnded = false;
+        _fireBallBonusActive = false;
+        _playerScore = 0;
+        _playerShotCounter = 0;
+        _lastShotPlayerScored = 0;
+        consecutiveGoals = 0;
     }
 
     void InstantiatePlayer()
@@ -84,12 +94,12 @@ public class RoundManager : MonoBehaviour
 
     public void ClearDictionaryAndDestroyOpponents()
     {
-        foreach (var opponent in _opponents.Keys)
+        foreach (var opponent in _opponentsAndScores.Keys)
         {
             Destroy(opponent.transform.parent.gameObject);
         }
 
-        _opponents.Clear();
+        _opponentsAndScores.Clear();
     }
 
     private void SetupEndOfRoundScreen()
@@ -97,11 +107,11 @@ public class RoundManager : MonoBehaviour
         SetPlayerCardValue();
         SetOpponentsCardValues();
 
-        if (_opponents.Count == 1)
+        if (_opponentsAndScores.Count == 1)
         {
-            if (_opponents.Values.First() > _playerScore)
+            if (_opponentsAndScores.Values.First() > _playerScore)
                 EndOfRoundScreenController.Instance.ChangeTitleText("You lost!");
-            else if (_opponents.Values.First() == _playerScore)
+            else if (_opponentsAndScores.Values.First() == _playerScore)
                 EndOfRoundScreenController.Instance.ChangeTitleText("Draw!");
             else
                 EndOfRoundScreenController.Instance.ChangeTitleText("You won!");
@@ -110,20 +120,20 @@ public class RoundManager : MonoBehaviour
 
     private void SetOpponentsCardValues()
     {
-        foreach (var opponent in _opponents.Keys)
+        foreach (var opponent in _opponentsAndScores.Keys)
         {
-            EndOfRoundScreenController.Instance.InstantiateOpponentCard(opponent.name, _opponents[opponent]);
+            EndOfRoundScreenController.Instance.InstantiateOpponentCard(opponent.name, _opponentsAndScores[opponent]);
         }
     }
 
     private bool CheckIfOpponentsBallsAreDribbling()
     {
-        if (_opponents.Count == 0)
+        if (_opponentsAndScores.Count == 0)
         {
             return true;
         }
 
-        foreach (var opponent in _opponents.Keys)
+        foreach (var opponent in _opponentsAndScores.Keys)
         {
             if (!opponent.ballController.IsDribbling()) return false;
         }
@@ -144,33 +154,64 @@ public class RoundManager : MonoBehaviour
 
     private void AssignPlayerToRandomPosition()
     {
-        var randomPosition = new Vector3(Random.Range(5f, 5f + _maxPossibleDistanceFromCenterOfPlayField), 0,
-            Random.Range(-_maxPossibleDistanceFromCenterOfPlayField, _maxPossibleDistanceFromCenterOfPlayField));
+        var randomPosition = GetRandomPositionOnField();
         PlayerController.Instance.transform.position = randomPosition;
         PlayerController.Instance.LookAtHoop();
         CameraController.Instance.SetPositionBehindPlayer();
     }
 
-    public void PlayerShot()
+    public void AddToPlayerShotCounter()
     {
         _playerShotCounter++;
+    }
+
+    public void AssignPlayerToNewPositionOnEvenShotCounter()
+    {
+        if (_playerShotCounter > _lastShotPlayerScored)
+        {
+            consecutiveGoals = 0;
+            _fireBallBonusActive = false;
+        }
+        if (!IsFireBallEffectActive())
+        {
+            IngameUIController.Instance.UpdateFireBallBar();
+            SetFireBallBonusActive();
+        }
         if (_playerShotCounter % 2 == 0) AssignPlayerToRandomPosition();
+    }
+    void SetFireBallBonusActive()
+    {
+        if (consecutiveGoals >= 3)
+        {
+            _fireBallBonusActive = true;
+            StartCoroutine(IngameUIController.Instance.StartEmptyingFireBallBarAfterItsFullAndWhileFireBallEffectIsActive());
+        }
+        else
+        {
+            _fireBallBonusActive = false;
+        }
     }
 
     public void AddPointsToPlayer(int points)
     {
+        if (_fireBallBonusActive)
+        {
+            points *= 2;
+        }
         _playerScore += points;
-        PlayerScoreChangedEvent?.Invoke(_playerScore);
+        _lastShotPlayerScored = _playerShotCounter;
+        consecutiveGoals++;
+        PlayerScoreChangedEvent?.Invoke(points);
     }
 
     public int GetTimeLeft()
     {
-        return (int) (_roundTime - (Time.time - _roundStartTimeStamp));
+        return (int)(_roundTime - (Time.time - _roundStartTimeStamp));
     }
 
     public Dictionary<OpponentController, int> GetOpponents()
     {
-        return _opponents;
+        return _opponentsAndScores;
     }
 
     public bool IsRoundActive()
@@ -180,7 +221,7 @@ public class RoundManager : MonoBehaviour
 
     public Vector3 GetCenterOfPlayField()
     {
-        Vector3 hoopPosition = hoopCenter.position;
+        Vector3 hoopPosition = HoopController.Instance.hoopCenter.position;
         hoopPosition.y = 0;
         return hoopPosition / 2;
     }
@@ -197,18 +238,19 @@ public class RoundManager : MonoBehaviour
 
     public void AddPointsToOpponent(OpponentController opponent, int points)
     {
-        _opponents[opponent] += points;
+        _opponentsAndScores[opponent] += points;
+        OpponentScoreChangedEvent?.Invoke(opponent, points);
     }
 
     public void AddAIOpponent(OpponentController opponent)
     {
-        _opponents.Add(opponent, 0);
+        _opponentsAndScores.Add(opponent, 0);
     }
 
     public Vector3 GetRandomPositionOnField()
     {
         return new Vector3(
-            Random.Range(0, _maxPossibleDistanceFromCenterOfPlayField),
+            Random.Range(5, 5f + _maxPossibleDistanceFromCenterOfPlayField),
             0,
             Random.Range(-_maxPossibleDistanceFromCenterOfPlayField, _maxPossibleDistanceFromCenterOfPlayField));
     }
@@ -216,5 +258,20 @@ public class RoundManager : MonoBehaviour
     public bool HasRoundEnded()
     {
         return _hasRoundEnded;
+    }
+
+    public int GetPlayerScore()
+    {
+        return _playerScore;
+    }
+
+    public bool IsFireBallEffectActive()
+    {
+        return _fireBallBonusActive;
+    }
+    public void EndFireBallEffect()
+    {
+        _fireBallBonusActive = false;
+        consecutiveGoals = 0;
     }
 }
