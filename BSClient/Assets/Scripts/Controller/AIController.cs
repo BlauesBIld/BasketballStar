@@ -27,11 +27,6 @@ public class AIController : MonoBehaviour
         RoundManager.Instance.RoundStartedEvent += StartShooting;
     }
 
-    private void Start()
-    {
-        GetComponent<OpponentController>().SetName("Computer");
-    }
-
     private void StartShooting()
     {
         StartCoroutine(ShootWithRandomDelay());
@@ -127,7 +122,7 @@ public class AIController : MonoBehaviour
         RoundManager.Instance.RoundStartedEvent -= StartShooting;
     }
 
-    public void SetDifficulty(DifficultySetting aiDifficulty)
+    public void SetDifficultyParams(DifficultySetting aiDifficulty)
     {
         _maxDelayBeforeThrow = aiDifficulty.maxDelayBeforeThrow;
         _minDelayBeforeThrow = aiDifficulty.minDelayBeforeThrow;

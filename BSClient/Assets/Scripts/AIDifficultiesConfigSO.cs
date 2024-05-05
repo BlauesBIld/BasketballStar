@@ -12,6 +12,7 @@ public class AIDifficultiesConfigSO : ScriptableObject
 public class DifficultySetting
 {
     public string difficultyName;
+    public string opponentName;
     public float minDelayBeforeThrow;
     public float maxDelayBeforeThrow;
     public float maxThrowPowerError;

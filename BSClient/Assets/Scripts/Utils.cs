@@ -12,11 +12,6 @@ public class Utils
         return swipeDistance / maxSwipeDistance * maxThrowPower + lowestThrowPowerThreshold;
     }
 
-    public static float ConvertThrowPowerToSwipeDistance(float throwPower, float maxSwipeDistance, float maxThrowPower)
-    {
-        return throwPower / maxThrowPower * maxSwipeDistance;
-    }
-
     public static float CalculateOptimalBackBoardThrowAngleRad(Vector3 ballThrowPosition)
     {
         Vector3 ringCenterPosition = HoopController.Instance.backBoardHoopCenter.position;

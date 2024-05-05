@@ -281,11 +281,12 @@ public class RoundManager : MonoBehaviour
         OpponentScoreChangedEvent?.Invoke(opponent, points);
     }
 
-    public void AddAIOpponent(int aiDifficulty)
+    public void AddAIOpponent(int aiDifficultyNumber)
     {
         OpponentController opponent = Instantiate(opponentPrefab).GetComponentInChildren<OpponentController>();
-        opponent.GetComponent<AIController>()
-            .SetDifficulty(GameManager.Instance.aiDifficultiesConfigSo.difficulties[aiDifficulty]);
+        DifficultySetting aiDifficulty = GameManager.Instance.aiDifficultiesConfigSo.difficulties[aiDifficultyNumber];
+        opponent.GetComponent<AIController>().SetDifficultyParams(aiDifficulty);
+        opponent.SetName(aiDifficulty.opponentName);
         _opponentsAndScores.Add(opponent, 0);
     }
 

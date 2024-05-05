@@ -10,16 +10,10 @@ using UnityEngine.UI;
 public class IngameUIController : MonoBehaviour
 {
     public GameObject fireBallBar;
-    public GameObject throwSwipeDistanceBar;
-    public GameObject OpponentCorner;
-    public GameObject OpponentScoreBlock;
+    public GameObject opponentCorner;
+    public GameObject opponentScoreBlock;
 
-    [FormerlySerializedAs("disappearingTextControlle")] [FormerlySerializedAs("disappearingTextController")]
     public GameObject disappearingTextPrefab;
-
-    public RectTransform perfectShotPowerIndicator;
-
-    public RectTransform perfectBackboardShotPowerIndicator;
 
     public TextMeshProUGUI playerScoreText;
 
@@ -53,54 +47,6 @@ public class IngameUIController : MonoBehaviour
         HideIngameUIAndReset();
     }
 
-    public void UpdateThrowPowerBar(float slideDistance)
-    {
-        float power = PlayerController.Instance.GetSlideDistance();
-        throwSwipeDistanceBar.GetComponent<Slider>().value = power;
-    }
-
-    public void SetThrowSwipeDistanceBarThresholds()
-    {
-        throwSwipeDistanceBar.GetComponent<Slider>().maxValue = PlayerController.Instance.GetMaxSwipeDistance();
-    }
-
-    public void SetPerfectPowerIndicatorsPositionAndHeight()
-    {
-        float perfectShotPower = PlayerController.Instance.optimalPerfectShotThrowPower;
-        float perfectBackboardShotPower = PlayerController.Instance.optimalBackBoardShotThrowPower;
-        float perfectShotThreshold = PlayerController.Instance.PerfectShotThreshold;
-        float perfectBackBoardShotThreshold = PlayerController.Instance.PerfectBackBoardShotThreshold;
-
-        float maxPower = PlayerController.Instance.GetThrowPowerRange();
-        float lowestPower = PlayerController.Instance.GetLowestThrowPower();
-
-        float lowerPerfectShotPowerInPercent = (perfectShotPower - perfectShotThreshold - lowestPower) / maxPower;
-        float upperPerfectShotPowerInPercent = (perfectShotPower + perfectShotThreshold - lowestPower) / maxPower;
-
-        float lowerPerfectBackboardShotPowerInPercent =
-            (perfectBackboardShotPower - perfectBackBoardShotThreshold - lowestPower) / maxPower;
-        float upperPerfectBackboardShotPowerInPercent =
-            (perfectBackboardShotPower + perfectBackBoardShotThreshold - lowestPower) / maxPower;
-
-        RectTransform rt = throwSwipeDistanceBar.GetComponent<RectTransform>();
-        float maxHeight = rt.rect.height;
-
-        float perfectShotYPosition = lowerPerfectShotPowerInPercent * maxHeight;
-        float perfectShotHeight = (upperPerfectShotPowerInPercent - lowerPerfectShotPowerInPercent) * maxHeight;
-
-        float perfectBackboardShotYPosition = lowerPerfectBackboardShotPowerInPercent * maxHeight;
-        float perfectBackboardShotHeight =
-            (upperPerfectBackboardShotPowerInPercent - lowerPerfectBackboardShotPowerInPercent) * maxHeight;
-
-        perfectShotPowerIndicator.localPosition = new Vector3(0, perfectShotYPosition, 0);
-        perfectShotPowerIndicator.sizeDelta =
-            new Vector2(perfectShotPowerIndicator.sizeDelta.x, perfectShotHeight);
-
-        perfectBackboardShotPowerIndicator.localPosition = new Vector3(0, perfectBackboardShotYPosition, 0);
-        perfectBackboardShotPowerIndicator.sizeDelta =
-            new Vector2(perfectShotPowerIndicator.sizeDelta.x, perfectBackboardShotHeight);
-    }
-
     public void UpdatePlayerScore(int addedScore)
     {
         playerScoreText.text = "You\n" + RoundManager.Instance.GetPlayerScore();
@@ -126,7 +72,8 @@ public class IngameUIController : MonoBehaviour
 
         RoundManager.Instance.PlayerScoreChangedEvent -= UpdatePlayerScore;
         RoundManager.Instance.OpponentScoreChangedEvent -= UpdateOpponentScore;
-        PlayerController.Instance.CurrentSwipeDistanceChangedEvent -= UpdateThrowPowerBar;
+        PlayerController.Instance.CurrentSwipeDistanceChangedEvent -=
+            ThrowSwipeDistanceBarController.Instance.UpdateThrowPowerBar;
     }
 
     public void HideIngameUIAndReset()
@@ -151,9 +98,9 @@ public class IngameUIController : MonoBehaviour
 
     private void DeleteEveryOpponentUIScoreBlock()
     {
-        foreach (RectTransform opponentScoreRect in OpponentCorner.GetComponentsInChildren<RectTransform>())
+        foreach (RectTransform opponentScoreRect in opponentCorner.GetComponentsInChildren<RectTransform>())
         {
-            if (opponentScoreRect.gameObject != OpponentCorner)
+            if (opponentScoreRect.gameObject != opponentCorner)
                 Destroy(opponentScoreRect.gameObject);
         }
     }
@@ -161,12 +108,13 @@ public class IngameUIController : MonoBehaviour
     public void ShowIngameUIAndSubscribeToEvents()
     {
         ShowIngameUI();
-        SetThrowSwipeDistanceBarThresholds();
+        ThrowSwipeDistanceBarController.Instance.SetThrowSwipeDistanceBarThresholds();
         InstantiateOpponentScoreBlocks();
         StartAndShowCountDown();
         RoundManager.Instance.PlayerScoreChangedEvent += UpdatePlayerScore;
         RoundManager.Instance.OpponentScoreChangedEvent += UpdateOpponentScore;
-        PlayerController.Instance.CurrentSwipeDistanceChangedEvent += UpdateThrowPowerBar;
+        PlayerController.Instance.CurrentSwipeDistanceChangedEvent +=
+            ThrowSwipeDistanceBarController.Instance.UpdateThrowPowerBar;
     }
 
     void UpdateOpponentScore(OpponentController opponent, int addedPoints)
@@ -180,7 +128,7 @@ public class IngameUIController : MonoBehaviour
         float currentRectTransformPosY = 0;
         foreach (OpponentController opponent in opponents.Keys)
         {
-            GameObject opponentScoreBlock = Instantiate(OpponentScoreBlock, OpponentCorner.transform);
+            GameObject opponentScoreBlock = Instantiate(this.opponentScoreBlock, opponentCorner.transform);
             opponentScoreBlock.transform.localPosition = new Vector3(0, currentRectTransformPosY, 0);
             opponent.SetScoreBlock(opponentScoreBlock);
             opponent.UpdateScore(0);

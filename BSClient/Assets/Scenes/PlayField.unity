@@ -699,6 +699,7 @@ GameObject:
   - component: {fileID: 259028275}
   - component: {fileID: 259028274}
   - component: {fileID: 259028276}
+  - component: {fileID: 259028277}
   m_Layer: 5
   m_Name: ThrowSwipeDistanceBar
   m_TagString: Untagged
@@ -818,6 +819,20 @@ MonoBehaviour:
   m_OnValueChanged:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &259028277
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 259028272}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 96e370417e0df7b438eee0bbc9eacb6a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  perfectShotPowerIndicator: {fileID: 1771058403}
+  perfectBackboardShotPowerIndicator: {fileID: 228694424}
 --- !u!1 &288675761
 GameObject:
   m_ObjectHideFlags: 0
@@ -4272,14 +4287,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   fireBallBar: {fileID: 626966339}
-  throwSwipeDistanceBar: {fileID: 259028272}
-  OpponentCorner: {fileID: 2063205986}
-  OpponentScoreBlock: {fileID: 8879337850119019042, guid: 3248a8a93ad12404bba2c8ac7eefeb96,
+  opponentCorner: {fileID: 2063205986}
+  opponentScoreBlock: {fileID: 8879337850119019042, guid: 3248a8a93ad12404bba2c8ac7eefeb96,
     type: 3}
   disappearingTextPrefab: {fileID: 5370778885126925658, guid: 4970731b179a97b4a982e197596dd566,
     type: 3}
-  perfectShotPowerIndicator: {fileID: 1771058403}
-  perfectBackboardShotPowerIndicator: {fileID: 228694424}
   playerScoreText: {fileID: 1836508694}
   timerText: {fileID: 893468410}
   timerSlider: {fileID: 288675761}

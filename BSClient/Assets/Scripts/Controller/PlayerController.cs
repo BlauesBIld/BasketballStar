@@ -140,7 +140,7 @@ public class PlayerController : MonoBehaviour
         ballController.Reset();
         CalculateAndSetOptimalThrowValues();
         SetThresholds();
-        IngameUIController.Instance.SetPerfectPowerIndicatorsPositionAndHeight();
+        ThrowSwipeDistanceBarController.Instance.SetPerfectPowerIndicatorsPositionAndHeight();
         _isChargingThrow = true;
     }
 

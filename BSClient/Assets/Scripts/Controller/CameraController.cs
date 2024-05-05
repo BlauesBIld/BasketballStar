@@ -9,7 +9,7 @@ public class CameraController : MonoBehaviour
 
     private float _initialDistanceFromCenter = 0f;
     private float _distanceFromHoop = 8f;
-    private float _shakeIntensity = 0f;
+    private float _fixedCameraHeight = 7f;
 
 
     private void Awake()
@@ -34,7 +34,7 @@ public class CameraController : MonoBehaviour
 
     void ResetPosition()
     {
-        transform.position = new Vector3(-8, 7, 0);
+        transform.position = new Vector3(-8, _fixedCameraHeight, 0);
         _initialDistanceFromCenter = Vector3.Distance(transform.position, RoundManager.Instance.GetCenterOfPlayField());
     }
 
@@ -49,6 +49,7 @@ public class CameraController : MonoBehaviour
     void RotateAroundFieldCenter()
     {
         Transform cameraTransform = transform;
+        cameraTransform.position = new Vector3(transform.position.x, _fixedCameraHeight, transform.position.z);
         cameraTransform.position += cameraTransform.right * Time.deltaTime * 2f;
         Vector3 centerOfPlayField = RoundManager.Instance.GetCenterOfPlayField();
         centerOfPlayField.y = 3f;

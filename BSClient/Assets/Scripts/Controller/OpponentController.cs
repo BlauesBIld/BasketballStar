@@ -9,7 +9,7 @@ public class OpponentController : MonoBehaviour
     public Transform positionAboveHead;
     public string opponentName = "Opponent";
 
-    GameObject scoreBlock;
+    GameObject _scoreBlock;
 
     public void SetName(string name)
     {
@@ -19,11 +19,11 @@ public class OpponentController : MonoBehaviour
 
     public void SetScoreBlock(GameObject scoreBlock)
     {
-        this.scoreBlock = scoreBlock;
+        this._scoreBlock = scoreBlock;
     }
 
     public void UpdateScore(int score)
     {
-        scoreBlock.GetComponentInChildren<TextMeshProUGUI>().text = opponentName + "\nScore: " + score;
+        _scoreBlock.GetComponentInChildren<TextMeshProUGUI>().text = opponentName + "\n" + score;
     }
 }

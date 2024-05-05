@@ -14,14 +14,17 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   difficulties:
   - difficultyName: EASY
+    opponentName: Dejan
     minDelayBeforeThrow: 1
     maxDelayBeforeThrow: 2.5
     maxThrowPowerError: 0.3
   - difficultyName: MEDIUM
+    opponentName: Laura
     minDelayBeforeThrow: 0.5
     maxDelayBeforeThrow: 1.5
     maxThrowPowerError: 0.18
   - difficultyName: HARD
+    opponentName: Andrea
     minDelayBeforeThrow: 0.3
     maxDelayBeforeThrow: 1.1
     maxThrowPowerError: 0.08
