@@ -27,7 +27,7 @@ public class AISelectionScreenController : MonoBehaviour
 
     private void SetButtonsText()
     {
-        var buttonTexts = GetComponentsInChildren<TextMeshProUGUI>();
+        TextMeshProUGUI[] buttonTexts = GetComponentsInChildren<TextMeshProUGUI>();
         for (int i = 0; i < GameManager.Instance.aiDifficultiesConfigSo.difficulties.Count; i++)
         {
             buttonTexts[i].text = GameManager.Instance.aiDifficultiesConfigSo.difficulties[i].difficultyName;

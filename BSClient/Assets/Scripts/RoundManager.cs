@@ -106,7 +106,7 @@ public class RoundManager : MonoBehaviour
 
     public void ClearDictionaryAndDestroyOpponents()
     {
-        foreach (var opponent in _opponentsAndScores.Keys)
+        foreach (OpponentController opponent in _opponentsAndScores.Keys)
         {
             Destroy(opponent.transform.parent.gameObject);
         }
@@ -132,7 +132,7 @@ public class RoundManager : MonoBehaviour
 
     private void SetOpponentsCardValues()
     {
-        foreach (var opponent in _opponentsAndScores.Keys)
+        foreach (OpponentController opponent in _opponentsAndScores.Keys)
         {
             EndOfRoundScreenController.Instance.InstantiateOpponentCard(opponent.name, _opponentsAndScores[opponent]);
         }
@@ -145,7 +145,7 @@ public class RoundManager : MonoBehaviour
             return true;
         }
 
-        foreach (var opponent in _opponentsAndScores.Keys)
+        foreach (OpponentController opponent in _opponentsAndScores.Keys)
         {
             if (!opponent.ballController.IsDribbling()) return false;
         }

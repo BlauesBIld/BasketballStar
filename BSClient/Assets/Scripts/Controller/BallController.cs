@@ -112,8 +112,8 @@ public class BallController : MonoBehaviour
 
     private IEnumerator MoveBallAboveOwner()
     {
-        var time = 0f;
-        var duration = 1f;
+        float time = 0f;
+        float duration = 1f;
         Vector3 targetPosition = positionAboveOwnerHead.position;
         while (time < duration)
         {
@@ -131,7 +131,7 @@ public class BallController : MonoBehaviour
 
         _rigidbody.AddForce(forceVector, ForceMode.Impulse);
 
-        var torqueForce = forceVector.magnitude;
+        float torqueForce = forceVector.magnitude;
         Vector3 torqueDirection = -owner.transform.right;
 
         _rigidbody.AddTorque(torqueDirection * torqueForce, ForceMode.Impulse);

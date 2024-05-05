@@ -9,9 +9,7 @@ public class CameraController : MonoBehaviour
 
     private float _initialDistanceFromCenter = 0f;
     private float _distanceFromHoop = 8f;
-
-    private Vector3 _moveVelocity = Vector3.zero;
-    private float _smoothTime = 2f;
+    private float _shakeIntensity = 0f;
 
 
     private void Awake()

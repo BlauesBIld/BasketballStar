@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using TMPro;
 using Unity.VisualScripting;
 using UnityEngine;
@@ -54,7 +55,7 @@ public class IngameUIController : MonoBehaviour
 
     public void UpdateThrowPowerBar(float slideDistance)
     {
-        var power = PlayerController.Instance.GetSlideDistance();
+        float power = PlayerController.Instance.GetSlideDistance();
         throwSwipeDistanceBar.GetComponent<Slider>().value = power;
     }
 
@@ -65,40 +66,40 @@ public class IngameUIController : MonoBehaviour
 
     public void SetPerfectPowerIndicatorsPositionAndHeight()
     {
-        var perfectShotPower = PlayerController.Instance.optimalPerfectShotThrowPower;
-        var perfectBackboardShotPower = PlayerController.Instance.optimalBackBoardShotThrowPower;
-        var perfectShotThreshold = PlayerController.Instance.PerfectShotThreshold;
-        var perfectBackBoardShotThreshold = PlayerController.Instance.PerfectBackBoardShotThreshold;
+        float perfectShotPower = PlayerController.Instance.optimalPerfectShotThrowPower;
+        float perfectBackboardShotPower = PlayerController.Instance.optimalBackBoardShotThrowPower;
+        float perfectShotThreshold = PlayerController.Instance.PerfectShotThreshold;
+        float perfectBackBoardShotThreshold = PlayerController.Instance.PerfectBackBoardShotThreshold;
 
         float maxPower = PlayerController.Instance.GetThrowPowerRange();
         float lowestPower = PlayerController.Instance.GetLowestThrowPower();
 
-        var lowerPerfectShotPowerInPercent = (perfectShotPower - perfectShotThreshold - lowestPower) / maxPower;
-        var upperPerfectShotPowerInPercent = (perfectShotPower + perfectShotThreshold - lowestPower) / maxPower;
+        float lowerPerfectShotPowerInPercent = (perfectShotPower - perfectShotThreshold - lowestPower) / maxPower;
+        float upperPerfectShotPowerInPercent = (perfectShotPower + perfectShotThreshold - lowestPower) / maxPower;
 
-        var lowerPerfectBackboardShotPowerInPercent =
+        float lowerPerfectBackboardShotPowerInPercent =
             (perfectBackboardShotPower - perfectBackBoardShotThreshold - lowestPower) / maxPower;
-        var upperPerfectBackboardShotPowerInPercent =
+        float upperPerfectBackboardShotPowerInPercent =
             (perfectBackboardShotPower + perfectBackBoardShotThreshold - lowestPower) / maxPower;
 
-        var rt = throwSwipeDistanceBar.GetComponent<RectTransform>();
-        var maxHeight = rt.rect.height;
+        RectTransform rt = throwSwipeDistanceBar.GetComponent<RectTransform>();
+        float maxHeight = rt.rect.height;
 
-        var perfectShotYPosition = lowerPerfectShotPowerInPercent * maxHeight;
-        var perfectShotHeight = (upperPerfectShotPowerInPercent - lowerPerfectShotPowerInPercent) * maxHeight;
+        float perfectShotYPosition = lowerPerfectShotPowerInPercent * maxHeight;
+        float perfectShotHeight = (upperPerfectShotPowerInPercent - lowerPerfectShotPowerInPercent) * maxHeight;
 
-        var perfectBackboardShotYPosition = lowerPerfectBackboardShotPowerInPercent * maxHeight;
-        var perfectBackboardShotHeight =
+        float perfectBackboardShotYPosition = lowerPerfectBackboardShotPowerInPercent * maxHeight;
+        float perfectBackboardShotHeight =
             (upperPerfectBackboardShotPowerInPercent - lowerPerfectBackboardShotPowerInPercent) * maxHeight;
 
-        var perfectShotIndicatorPosition = perfectShotPowerIndicator.position;
+        Vector3 perfectShotIndicatorPosition = perfectShotPowerIndicator.position;
         perfectShotPowerIndicator.position =
             new Vector3(perfectShotIndicatorPosition.x, rt.transform.position.y + perfectShotYPosition,
                 perfectShotIndicatorPosition.z);
         perfectShotPowerIndicator.sizeDelta =
             new Vector2(perfectShotPowerIndicator.sizeDelta.x, perfectShotHeight);
 
-        var perfectBackboardShotIndicatorPosition = perfectBackboardShotPowerIndicator.position;
+        Vector3 perfectBackboardShotIndicatorPosition = perfectBackboardShotPowerIndicator.position;
         perfectBackboardShotPowerIndicator.position =
             new Vector3(perfectBackboardShotIndicatorPosition.x,
                 rt.transform.position.y + perfectBackboardShotYPosition,
@@ -182,11 +183,11 @@ public class IngameUIController : MonoBehaviour
 
     void InstantiateOpponentScoreBlocks()
     {
-        var opponents = RoundManager.Instance.GetOpponents();
+        Dictionary<OpponentController, int> opponents = RoundManager.Instance.GetOpponents();
         float currentRectTransformPosY = 0;
         foreach (OpponentController opponent in opponents.Keys)
         {
-            var opponentScoreBlock = Instantiate(OpponentScoreBlock, OpponentCorner.transform);
+            GameObject opponentScoreBlock = Instantiate(OpponentScoreBlock, OpponentCorner.transform);
             opponentScoreBlock.transform.localPosition = new Vector3(0, currentRectTransformPosY, 0);
             opponent.SetScoreBlock(opponentScoreBlock);
             opponent.UpdateScore(0);
@@ -202,8 +203,8 @@ public class IngameUIController : MonoBehaviour
     private IEnumerator TransitionToValueOnFireBallBar(float value, float duration)
     {
         float elapsedTime = 0;
-        var slider = fireBallBar.GetComponent<Slider>();
-        var startValue = slider.value;
+        Slider slider = fireBallBar.GetComponent<Slider>();
+        float startValue = slider.value;
         while (elapsedTime < duration)
         {
             slider.value = Mathf.Lerp(startValue, value, elapsedTime / duration);
@@ -216,13 +217,13 @@ public class IngameUIController : MonoBehaviour
 
     public IEnumerator StartEmptyingFireBallBarAfterItsFullAndWhileFireBallEffectIsActive()
     {
-        var slider = fireBallBar.GetComponent<Slider>();
+        Slider slider = fireBallBar.GetComponent<Slider>();
         float duration = 10f;
 
         yield return new WaitForSeconds(0.5f);
 
         float elapsedTime = 0;
-        var startValue = slider.value;
+        float startValue = slider.value;
         while (elapsedTime < duration && RoundManager.Instance.IsFireBallEffectActive())
         {
             slider.value = Mathf.Lerp(startValue, 0, elapsedTime / duration);

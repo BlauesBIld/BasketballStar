@@ -38,9 +38,9 @@ public class Utils
         float verticalDistance = ringCenterPositionForBackBoard.y - ballThrowPosition.y;
 
         return Mathf.Sqrt(-Physics.gravity.magnitude * Mathf.Pow(horizontalDistance, 2) /
-            (2 * (verticalDistance -
-                    horizontalDistance * Mathf.Tan(optimalAngleRad)) *
-                Mathf.Pow(Mathf.Cos(optimalAngleRad), 2)));
+                          (2 * (verticalDistance -
+                                horizontalDistance * Mathf.Tan(optimalAngleRad)) *
+                           Mathf.Pow(Mathf.Cos(optimalAngleRad), 2)));
     }
 
     public static float CalculateOptimalThrowAngleRad(Vector3 ballThrowPosition)
@@ -64,9 +64,9 @@ public class Utils
         float verticalDistance = ringCenterPosition.y - ballThrowPosition.y;
 
         return Mathf.Sqrt(-Physics.gravity.magnitude * Mathf.Pow(horizontalDistance, 2) /
-            (2 * (verticalDistance -
-                    horizontalDistance * Mathf.Tan(optimalAngleRad)) *
-                Mathf.Pow(Mathf.Cos(optimalAngleRad), 2)));
+                          (2 * (verticalDistance -
+                                horizontalDistance * Mathf.Tan(optimalAngleRad)) *
+                           Mathf.Pow(Mathf.Cos(optimalAngleRad), 2)));
     }
 
     public static float CalculateTimeToReachHoop(Vector3 ballThrowPosition, float optimalAngleRad)
@@ -77,14 +77,14 @@ public class Utils
             new Vector3(ringCenterPosition.x, 0, ringCenterPosition.z));
 
         return horizontalDistance /
-            (Mathf.Cos(optimalAngleRad) * CalculateOptimalThrowPower(ballThrowPosition, optimalAngleRad));
+               (Mathf.Cos(optimalAngleRad) * CalculateOptimalThrowPower(ballThrowPosition, optimalAngleRad));
     }
 
     public static float CalculateJumpHeight(float jumpForce)
     {
-        var initialVelocity = jumpForce;
-        var gravity = Physics.gravity.magnitude;
-        var jumpHeight = initialVelocity * initialVelocity / (2 * gravity);
+        float initialVelocity = jumpForce;
+        float gravity = Physics.gravity.magnitude;
+        float jumpHeight = initialVelocity * initialVelocity / (2 * gravity);
         return jumpHeight;
     }
 }

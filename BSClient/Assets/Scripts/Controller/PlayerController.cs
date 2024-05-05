@@ -78,7 +78,7 @@ public class PlayerController : MonoBehaviour
                     }
                     else if (Input.GetTouch(0).phase == TouchPhase.Moved && _initialTouchPosition > 0f)
                     {
-                        var swipeDistance = Input.GetTouch(0).position.y - _initialTouchPosition;
+                        float swipeDistance = Input.GetTouch(0).position.y - _initialTouchPosition;
                         if (swipeDistance > 0)
                         {
                             if (_firstSwipeDirection == null)
@@ -155,7 +155,7 @@ public class PlayerController : MonoBehaviour
 
     private float GetHorizontalDistanceFromCenterToHoop()
     {
-        var hoopPosition = HoopController.Instance.hoopCenter.position;
+        Vector3 hoopPosition = HoopController.Instance.hoopCenter.position;
         return new Vector3(hoopPosition.x, 0, hoopPosition.z)
             .magnitude;
     }
@@ -168,7 +168,7 @@ public class PlayerController : MonoBehaviour
     private void ThrowBall()
     {
         ThrowStartedEvent?.Invoke();
-        var throwForce = Utils.ConvertSwipeDistanceToThrowPower(_currentSwipeDistance);
+        float throwForce = Utils.ConvertSwipeDistanceToThrowPower(_currentSwipeDistance);
         Vector3 throwForceVector = CheckForThresholdsAndCalculateForceVector(throwForce);
         ballController.Throw(throwForceVector);
     }
@@ -233,7 +233,7 @@ public class PlayerController : MonoBehaviour
 
     private void CalculateAndSetOptimalThrowValues()
     {
-        var ballThrowPosition = positionAboveHead.position;
+        Vector3 ballThrowPosition = positionAboveHead.position;
         ballThrowPosition.y += Utils.CalculateJumpHeight(_jumpForce);
 
         optimalPerfectShotAngleRad = Utils.CalculateOptimalThrowAngleRad(ballThrowPosition);
@@ -261,8 +261,8 @@ public class PlayerController : MonoBehaviour
 
     public float GetHorizontalDistanceFromBackBoardHoop()
     {
-        var ballThrowPosition = positionAboveHead.position;
-        var hoopCenterPosition = HoopController.Instance.backBoardHoopCenter.position;
+        Vector3 ballThrowPosition = positionAboveHead.position;
+        Vector3 hoopCenterPosition = HoopController.Instance.backBoardHoopCenter.position;
         return Vector3.Distance(new Vector3(ballThrowPosition.x, 0, ballThrowPosition.z),
             new Vector3(hoopCenterPosition.x, 0, hoopCenterPosition.z));
     }

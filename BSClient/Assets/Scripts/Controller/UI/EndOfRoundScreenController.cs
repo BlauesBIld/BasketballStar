@@ -52,7 +52,7 @@ public class EndOfRoundScreenController : MonoBehaviour
 
     public void InstantiateOpponentCard(string opponentName, int score)
     {
-        var opponentCard = Instantiate(playerCardPrefab, playersPanel.transform);
+        GameObject opponentCard = Instantiate(playerCardPrefab, playersPanel.transform);
         opponentCard.transform.localScale *= 0.8f;
         opponentCard.GetComponent<ResultCardController>().SetResultCardValues(opponentName, score);
     }

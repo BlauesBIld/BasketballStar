@@ -69,7 +69,7 @@ public class AIController : MonoBehaviour
 
     private void ThrowBall()
     {
-        var throwPower = optimalPerfectShotThrowPower + Random.Range(-_maxErrorPower, _maxErrorPower);
+        float throwPower = optimalPerfectShotThrowPower + Random.Range(-_maxErrorPower, _maxErrorPower);
         Vector3 hoopPosition = HoopController.Instance.hoopCenter.position;
         hoopPosition.y = 0;
         Vector3 opponentPosition = transform.position;
@@ -111,7 +111,7 @@ public class AIController : MonoBehaviour
 
     private void CalculateAndSetOptimalThrowValues()
     {
-        var ballThrowPosition = positionAboveHead.position;
+        Vector3 ballThrowPosition = positionAboveHead.position;
         ballThrowPosition.y += Utils.CalculateJumpHeight(_jumpForce);
 
         optimalPerfectShotAngleRad = Utils.CalculateOptimalThrowAngleRad(ballThrowPosition);
