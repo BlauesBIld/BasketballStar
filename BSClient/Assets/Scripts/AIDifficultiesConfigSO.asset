@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 15c600b1609b0cf4c8df71fd8e134521, type: 3}
+  m_Name: AIDifficultiesConfigSO
+  m_EditorClassIdentifier: 
+  difficulties:
+  - difficultyName: EASY
+    minDelayBeforeThrow: 1
+    maxDelayBeforeThrow: 2.5
+    maxThrowPowerError: 0.3
+  - difficultyName: MEDIUM
+    minDelayBeforeThrow: 0.5
+    maxDelayBeforeThrow: 1.5
+    maxThrowPowerError: 0.18
+  - difficultyName: HARD
+    minDelayBeforeThrow: 0.3
+    maxDelayBeforeThrow: 1.1
+    maxThrowPowerError: 0.08

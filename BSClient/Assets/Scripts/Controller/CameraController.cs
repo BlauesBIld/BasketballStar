@@ -86,20 +86,20 @@ public class CameraController : MonoBehaviour
         Vector3 hoopPosition = HoopController.Instance.hoopCenter.position;
         Vector3 targetPosition = (transform.position - hoopPosition).normalized * _distanceFromHoop + hoopPosition;
         targetPosition.y = hoopPosition.y;
-        Vector3 targetUpPosition = transform.position + Vector3.up * 1f;
+        Vector3 targetUpPosition = transform.position + Vector3.up * 2f;
 
-        StartCoroutine(MoveSequence(targetUpPosition, targetPosition));
+        StartCoroutine(MoveBetweenPlayerAndHoopSequence(targetUpPosition, targetPosition));
     }
 
-    IEnumerator MoveSequence(Vector3 targetUpPosition, Vector3 targetPosition)
+    IEnumerator MoveBetweenPlayerAndHoopSequence(Vector3 targetUpPosition, Vector3 targetPosition)
     {
         float timeForThrow = Utils.CalculateTimeToReachHoop(PlayerController.Instance.transform.position,
             PlayerController.Instance.optimalPerfectShotAngleRad);
         targetPosition.y += 1f;
         yield return StartCoroutine(MoveToPosition(targetUpPosition, timeForThrow * 0.7f));
 
-        float timeDifference = PlayerController.Instance.ShotFlyingTime - timeForThrow * 0.3f;
-        targetPosition.y += 3f;
+        float timeDifference = PlayerController.Instance.ShotFlyingTime - timeForThrow * 0.7f;
+        targetPosition.y += 1f;
         yield return StartCoroutine(MoveToPosition(targetPosition, timeDifference));
 
         SetPositionBehindPlayer();

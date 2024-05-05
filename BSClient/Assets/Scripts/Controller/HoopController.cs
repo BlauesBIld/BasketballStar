@@ -13,6 +13,8 @@ public class HoopController : MonoBehaviour
     public BallController ballController;
 
     public ParticleSystem rippleEffect;
+    public ParticleSystem explosionSparks;
+    public ParticleSystem explosionFlash;
 
     private float _physicsErrorMargin = 0.25f;
 
@@ -31,10 +33,10 @@ public class HoopController : MonoBehaviour
 
     private void Start()
     {
-        rippleEffect.Stop();
         AdjustHoopCenterWithRadiusOnYAxis();
         SetBackBoardHoopCenterPosition();
     }
+
     void AdjustHoopCenterWithRadiusOnYAxis()
     {
         Vector3 hoopCenterPosition = hoopCenter.position;
@@ -49,6 +51,13 @@ public class HoopController : MonoBehaviour
     {
         rippleEffect.Play();
     }
+
+    public void PlayExplosionEffect()
+    {
+        explosionSparks.Play();
+        explosionFlash.Play();
+    }
+
 
     public void SetBackBoardHoopCenterPosition()
     {

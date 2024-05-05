@@ -8,17 +8,20 @@ using Random = UnityEngine.Random;
 public class RoundManager : MonoBehaviour
 {
     public delegate void OnPlayerScoreChanged(int addedPoints);
+
     public delegate void OnOpponentScoreChanged(OpponentController opponent, int addedPoints);
 
     private readonly float _maxPossibleDistanceFromCenterOfPlayField = 5f;
 
-    private float _roundTime = 60f;
+    private float _roundTime = 15f;
     private bool _hasRoundEnded = true;
 
     private int _playerScore;
     public GameObject playerPrefab;
     public GameObject opponentPrefab;
-    private readonly Dictionary<OpponentController, int> _opponentsAndScores = new Dictionary<OpponentController, int>();
+
+    private readonly Dictionary<OpponentController, int>
+        _opponentsAndScores = new Dictionary<OpponentController, int>();
 
     private int _playerShotCounter;
     private float _roundStartTimeStamp;
@@ -31,6 +34,7 @@ public class RoundManager : MonoBehaviour
     public event OnOpponentScoreChanged OpponentScoreChangedEvent;
     public event Action RoundEndedEvent;
     public event Action RoundStartedEvent;
+    public event Action RoundCreatedEvent;
 
     public static RoundManager Instance { get; private set; }
 
@@ -49,19 +53,27 @@ public class RoundManager : MonoBehaviour
 
     private void Update()
     {
-        if (IsRoundActive()) IngameUIController.Instance.UpdateTimer(GetTimeLeft());
+        if (HasRoundStarted() && IsRoundActive()) IngameUIController.Instance.UpdateTimer(GetTimeLeft());
     }
 
 
-    public void StartRound()
+    public void CreateRound()
     {
         InstantiatePlayer();
         ResetVariableValues();
         AssignPlayerToRandomPosition();
-        StartCoroutine(EndGameAfterTime());
-        RoundStartedEvent?.Invoke();
+        RoundCreatedEvent?.Invoke();
+        Debug.Log("Round created");
         PlayerScoreChangedEvent?.Invoke(0);
     }
+
+    public void StartRound()
+    {
+        StartCoroutine(EndGameAfterTime());
+        RoundStartedEvent?.Invoke();
+        Debug.Log("Round started");
+    }
+
     void ResetVariableValues()
     {
         _hasRoundEnded = false;
@@ -172,19 +184,23 @@ public class RoundManager : MonoBehaviour
             consecutiveGoals = 0;
             _fireBallBonusActive = false;
         }
+
         if (!IsFireBallEffectActive())
         {
             IngameUIController.Instance.UpdateFireBallBar();
             SetFireBallBonusActive();
         }
+
         if (_playerShotCounter % 2 == 0) AssignPlayerToRandomPosition();
     }
+
     void SetFireBallBonusActive()
     {
         if (consecutiveGoals >= 3)
         {
             _fireBallBonusActive = true;
-            StartCoroutine(IngameUIController.Instance.StartEmptyingFireBallBarAfterItsFullAndWhileFireBallEffectIsActive());
+            StartCoroutine(IngameUIController.Instance
+                .StartEmptyingFireBallBarAfterItsFullAndWhileFireBallEffectIsActive());
         }
         else
         {
@@ -192,21 +208,46 @@ public class RoundManager : MonoBehaviour
         }
     }
 
-    public void AddPointsToPlayer(int points)
+    public void AddPointsToPlayerAndSpawnDisappearingText(int points)
     {
+        SetColorAndSubtitleText(points, out Color textColor, out string subTitle);
+
         if (_fireBallBonusActive)
         {
             points *= 2;
         }
+
+        string title = "+" + points + " pts!";
+        IngameUIController.Instance.SpawnDisappearingText(textColor, title, subTitle);
+
         _playerScore += points;
         _lastShotPlayerScored = _playerShotCounter;
         consecutiveGoals++;
         PlayerScoreChangedEvent?.Invoke(points);
     }
 
+    private static void SetColorAndSubtitleText(int points, out Color textColor, out string subTitle)
+    {
+        switch (points)
+        {
+            case 3:
+                textColor = Color.green;
+                subTitle = "Perfect Shot!";
+                break;
+            case 6:
+                textColor = Color.cyan;
+                subTitle = "Backboard Shot!";
+                break;
+            default:
+                textColor = Color.HSVToRGB(0.08f, 0.8f, 1);
+                subTitle = "";
+                break;
+        }
+    }
+
     public int GetTimeLeft()
     {
-        return (int)(_roundTime - (Time.time - _roundStartTimeStamp));
+        return (int) (_roundTime - (Time.time - _roundStartTimeStamp));
     }
 
     public Dictionary<OpponentController, int> GetOpponents()
@@ -242,8 +283,11 @@ public class RoundManager : MonoBehaviour
         OpponentScoreChangedEvent?.Invoke(opponent, points);
     }
 
-    public void AddAIOpponent(OpponentController opponent)
+    public void AddAIOpponent(int aiDifficulty)
     {
+        OpponentController opponent = Instantiate(opponentPrefab).GetComponentInChildren<OpponentController>();
+        opponent.GetComponent<AIController>()
+            .SetDifficulty(GameManager.Instance.aiDifficultiesConfigSo.difficulties[aiDifficulty]);
         _opponentsAndScores.Add(opponent, 0);
     }
 
@@ -269,9 +313,15 @@ public class RoundManager : MonoBehaviour
     {
         return _fireBallBonusActive;
     }
+
     public void EndFireBallEffect()
     {
         _fireBallBonusActive = false;
         consecutiveGoals = 0;
+    }
+
+    public bool HasRoundStarted()
+    {
+        return _roundStartTimeStamp != 0;
     }
 }

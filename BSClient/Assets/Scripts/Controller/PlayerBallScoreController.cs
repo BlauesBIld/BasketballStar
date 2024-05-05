@@ -10,24 +10,23 @@ public class PlayerBallScoreController : MonoBehaviour
             Debug.Log("Touched game objects: " + playerBall.GetTouchedGameObjects().Count);
             if (playerBall.GetTouchedGameObjects().Count == 0)
             {
-                RoundManager.Instance.AddPointsToPlayer(3);
-                //TODO: Add effects for perfect shot
+                RoundManager.Instance.AddPointsToPlayerAndSpawnDisappearingText(3);
+                HoopController.Instance.PlayExplosionEffect();
             }
             else
             {
                 if (BackBoardController.Instance.IsGlowing() && playerBall.GetTouchedGameObjects()
-                    .Contains(BackBoardController.Instance.gameObject))
+                        .Contains(BackBoardController.Instance.gameObject))
                 {
-                    RoundManager.Instance.AddPointsToPlayer(6);
-                    //TODO: Add effects for backboard shot while it glows
+                    RoundManager.Instance.AddPointsToPlayerAndSpawnDisappearingText(6);
+                    BackBoardController.Instance.PlaySparksEffect();
                 }
                 else
                 {
-                    RoundManager.Instance.AddPointsToPlayer(2);
+                    RoundManager.Instance.AddPointsToPlayerAndSpawnDisappearingText(2);
+                    HoopController.Instance.PlayRippleEffect();
                 }
             }
-
-            HoopController.Instance.PlayRippleEffect();
         }
     }
 }

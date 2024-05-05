@@ -1,17 +1,20 @@
 using System;
 using System.Collections;
 using TMPro;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Serialization;
 using UnityEngine.UI;
 
 public class IngameUIController : MonoBehaviour
 {
-
     public GameObject fireBallBar;
     public GameObject throwSwipeDistanceBar;
     public GameObject OpponentCorner;
     public GameObject OpponentScoreBlock;
+
+    [FormerlySerializedAs("disappearingTextControlle")] [FormerlySerializedAs("disappearingTextController")]
+    public GameObject disappearingTextPrefab;
 
     public RectTransform perfectShotPowerIndicator;
 
@@ -30,7 +33,7 @@ public class IngameUIController : MonoBehaviour
         {
             Instance = this;
             RoundManager.Instance.RoundEndedEvent += HideIngameUIAndUnsubscribeFromEvents;
-            RoundManager.Instance.RoundStartedEvent += ShowIngameUIAndSubscribeToEvents;
+            RoundManager.Instance.RoundCreatedEvent += ShowIngameUIAndSubscribeToEvents;
         }
         else
         {
@@ -39,9 +42,14 @@ public class IngameUIController : MonoBehaviour
         }
     }
 
+    private void StartAndShowCountDown()
+    {
+        CountDownController.Instance.StartCountdownAndRoundAfter();
+    }
+
     void Start()
     {
-        HideIngameUIAndResetFireBallBar();
+        HideIngameUIAndReset();
     }
 
     public void UpdateThrowPowerBar(float slideDistance)
@@ -101,7 +109,7 @@ public class IngameUIController : MonoBehaviour
 
     public void UpdatePlayerScore(int addedScore)
     {
-        playerScoreText.text = "Score: \n" + RoundManager.Instance.GetPlayerScore();
+        playerScoreText.text = "You\n" + RoundManager.Instance.GetPlayerScore();
     }
 
     public void UpdateTimer(int timeLeft)
@@ -120,17 +128,40 @@ public class IngameUIController : MonoBehaviour
 
     public void HideIngameUIAndUnsubscribeFromEvents()
     {
-        HideIngameUIAndResetFireBallBar();
+        HideIngameUIAndReset();
 
         RoundManager.Instance.PlayerScoreChangedEvent -= UpdatePlayerScore;
         RoundManager.Instance.OpponentScoreChangedEvent -= UpdateOpponentScore;
         PlayerController.Instance.CurrentSwipeDistanceChangedEvent -= UpdateThrowPowerBar;
     }
 
-    public void HideIngameUIAndResetFireBallBar()
+    public void HideIngameUIAndReset()
     {
         fireBallBar.GetComponent<Slider>().value = 0;
+        DeleteEveryOpponentUIScoreBlock();
+        DeleteAllDisappearingTextsIfAnyExist();
+
         gameObject.SetActive(false);
+    }
+
+    private void DeleteAllDisappearingTextsIfAnyExist()
+    {
+        foreach (Transform child in transform)
+        {
+            if (child.gameObject.GetComponent<DisappearingTextController>())
+            {
+                Destroy(child.gameObject);
+            }
+        }
+    }
+
+    private void DeleteEveryOpponentUIScoreBlock()
+    {
+        foreach (RectTransform opponentScoreRect in OpponentCorner.GetComponentsInChildren<RectTransform>())
+        {
+            if (opponentScoreRect.gameObject != OpponentCorner)
+                Destroy(opponentScoreRect.gameObject);
+        }
     }
 
     public void ShowIngameUIAndSubscribeToEvents()
@@ -138,10 +169,12 @@ public class IngameUIController : MonoBehaviour
         ShowIngameUI();
         SetThrowSwipeDistanceBarThresholds();
         InstantiateOpponentScoreBlocks();
+        StartAndShowCountDown();
         RoundManager.Instance.PlayerScoreChangedEvent += UpdatePlayerScore;
         RoundManager.Instance.OpponentScoreChangedEvent += UpdateOpponentScore;
         PlayerController.Instance.CurrentSwipeDistanceChangedEvent += UpdateThrowPowerBar;
     }
+
     void UpdateOpponentScore(OpponentController opponent, int addedPoints)
     {
         opponent.UpdateScore(RoundManager.Instance.GetOpponents()[opponent]);
@@ -177,8 +210,10 @@ public class IngameUIController : MonoBehaviour
             elapsedTime += Time.deltaTime;
             yield return null;
         }
+
         slider.value = value;
     }
+
     public IEnumerator StartEmptyingFireBallBarAfterItsFullAndWhileFireBallEffectIsActive()
     {
         var slider = fireBallBar.GetComponent<Slider>();
@@ -198,5 +233,13 @@ public class IngameUIController : MonoBehaviour
         RoundManager.Instance.EndFireBallEffect();
 
         slider.value = 0;
+    }
+
+    public void SpawnDisappearingText(Color color, string title, string subTitle = "")
+    {
+        DisappearingTextController disappearingText =
+            Instantiate(disappearingTextPrefab, transform).GetComponent<DisappearingTextController>();
+        disappearingText.SetText(title, subTitle);
+        disappearingText.SetColor(color);
     }
 }

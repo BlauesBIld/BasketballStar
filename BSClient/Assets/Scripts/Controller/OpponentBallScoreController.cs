@@ -13,20 +13,20 @@ public class OpponentBallScoreController : MonoBehaviour
             if (opponentBall.GetTouchedGameObjects().Count == 0)
             {
                 points = 3;
-                //TODO: Add effects for perfect shot
+                HoopController.Instance.PlayExplosionEffect();
             }
             else
             {
                 if (BackBoardController.Instance.IsGlowing() && opponentBall.GetTouchedGameObjects()
-                    .Contains(BackBoardController.Instance.gameObject))
+                        .Contains(BackBoardController.Instance.gameObject))
                 {
-                    points = 5;
-                    //TODO: Add effects for backboard shot while it glows
+                    points = 6;
+                    BackBoardController.Instance.PlaySparksEffect();
                 }
                 else
                 {
                     points = 2;
-                    //TODO: Add effects for normal shot
+                    HoopController.Instance.PlayRippleEffect();
                 }
             }
 
@@ -34,7 +34,6 @@ public class OpponentBallScoreController : MonoBehaviour
             {
                 RoundManager.Instance.AddPointsToOpponent(opponentBall.owner.GetComponent<OpponentController>(),
                     points);
-
             }
         }
     }

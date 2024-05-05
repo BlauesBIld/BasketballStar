@@ -25,7 +25,7 @@ public class PlayerController : MonoBehaviour
     private readonly float _jumpForce = 3f;
     private float _currentSwipeDistance;
     private float? _firstSwipeDirection;
-    private float _initialTouchPosition;
+    private float _initialTouchPosition = -1;
 
     private bool _isChargingThrow = true;
 
@@ -43,7 +43,7 @@ public class PlayerController : MonoBehaviour
         if (Instance == null)
         {
             Instance = this;
-            RoundManager.Instance.RoundStartedEvent += ResetShot;
+            RoundManager.Instance.RoundCreatedEvent += ResetShot;
         }
         else
         {
@@ -66,7 +66,7 @@ public class PlayerController : MonoBehaviour
 
     private void HandleSwipeUp()
     {
-        if (!RoundManager.Instance.HasRoundEnded() && Input.touchCount > 0)
+        if (!RoundManager.Instance.HasRoundEnded() && RoundManager.Instance.HasRoundStarted() && Input.touchCount > 0)
         {
             if (_isChargingThrow)
             {
@@ -76,7 +76,7 @@ public class PlayerController : MonoBehaviour
                     {
                         _initialTouchPosition = Input.GetTouch(0).position.y;
                     }
-                    else if (Input.GetTouch(0).phase == TouchPhase.Moved)
+                    else if (Input.GetTouch(0).phase == TouchPhase.Moved && _initialTouchPosition > 0f)
                     {
                         var swipeDistance = Input.GetTouch(0).position.y - _initialTouchPosition;
                         if (swipeDistance > 0)
@@ -134,6 +134,7 @@ public class PlayerController : MonoBehaviour
     public void ResetShot()
     {
         _currentSwipeDistance = 0f;
+        _initialTouchPosition = -1;
         CurrentSwipeDistanceChangedEvent?.Invoke(_currentSwipeDistance);
         ThrowEndedEvent?.Invoke();
         ballController.Reset();
@@ -147,7 +148,7 @@ public class PlayerController : MonoBehaviour
     {
         _lowestThrowPowerThreshold = optimalPerfectShotThrowPower - 1f;
         _highestPerfectThrowPowerThreshold = optimalPerfectShotThrowPower +
-            (optimalBackBoardShotThrowPower - optimalPerfectShotThrowPower) / 2f;
+                                             (optimalBackBoardShotThrowPower - optimalPerfectShotThrowPower) / 2f;
         _highestBackBoardThrowPowerThreshold = optimalBackBoardShotThrowPower + 0.5f;
         ThresholdsChangedEvent?.Invoke();
     }
@@ -198,7 +199,7 @@ public class PlayerController : MonoBehaviour
         }
 
         Vector3 forceVector = towardsDesiredHoop * Mathf.Cos(optimalShotAngleRad) +
-            transform.up * Mathf.Sin(optimalShotAngleRad);
+                              transform.up * Mathf.Sin(optimalShotAngleRad);
         return forceVector * throwPower;
     }
 
@@ -289,7 +290,7 @@ public class PlayerController : MonoBehaviour
     void OnDestroy()
     {
         Instance = null;
-        RoundManager.Instance.RoundStartedEvent -= ResetShot;
+        RoundManager.Instance.RoundCreatedEvent -= ResetShot;
     }
 
     public float GetMaxSwipeDistance()

@@ -23,7 +23,7 @@ public class AIController : MonoBehaviour
 
     private void Awake()
     {
-        RoundManager.Instance.RoundStartedEvent += ResetShot;
+        RoundManager.Instance.RoundCreatedEvent += ResetShot;
         RoundManager.Instance.RoundStartedEvent += StartShooting;
     }
 
@@ -77,7 +77,7 @@ public class AIController : MonoBehaviour
 
         Vector3 towardsDesiredHoop = (hoopPosition - opponentPosition).normalized;
         Vector3 throwVector = towardsDesiredHoop * Mathf.Cos(optimalPerfectShotAngleRad) +
-            transform.up * Mathf.Sin(optimalPerfectShotAngleRad);
+                              transform.up * Mathf.Sin(optimalPerfectShotAngleRad);
         GetComponent<OpponentController>().ballController.Throw(throwVector * throwPower);
     }
 
@@ -123,7 +123,14 @@ public class AIController : MonoBehaviour
 
     private void OnDestroy()
     {
-        RoundManager.Instance.RoundStartedEvent -= ResetShot;
+        RoundManager.Instance.RoundCreatedEvent -= ResetShot;
         RoundManager.Instance.RoundStartedEvent -= StartShooting;
+    }
+
+    public void SetDifficulty(DifficultySetting aiDifficulty)
+    {
+        _maxDelayBeforeThrow = aiDifficulty.maxDelayBeforeThrow;
+        _minDelayBeforeThrow = aiDifficulty.minDelayBeforeThrow;
+        _maxErrorPower = aiDifficulty.maxThrowPowerError;
     }
 }

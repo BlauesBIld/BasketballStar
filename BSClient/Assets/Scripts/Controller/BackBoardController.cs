@@ -2,13 +2,16 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 public class BackBoardController : MonoBehaviour
 {
     public static BackBoardController Instance { get; private set; }
 
-    public float glowDuration = 0f;
-    public float glowStartTime = 0f;
+    private float _glowDuration = 0f;
+    private float _glowStartTime = 0f;
+
+    public ParticleSystem sparks;
 
     public GameObject backBoardGlow;
     public GameObject backBoardOuterGlow;
@@ -39,9 +42,9 @@ public class BackBoardController : MonoBehaviour
 
     private IEnumerator GlowAfterStartTime()
     {
-        yield return new WaitForSeconds(glowStartTime);
+        yield return new WaitForSeconds(_glowStartTime);
         StartGlowing();
-        yield return new WaitForSeconds(glowDuration);
+        yield return new WaitForSeconds(_glowDuration);
         StopGlowing();
     }
 
@@ -61,8 +64,8 @@ public class BackBoardController : MonoBehaviour
         float maxGlowDuration = maxRoundTime / 2;
         float minGlowDuration = maxRoundTime / 4;
 
-        glowDuration = UnityEngine.Random.Range(minGlowDuration, maxGlowDuration);
-        glowStartTime = UnityEngine.Random.Range(0, maxRoundTime - glowDuration);
+        _glowDuration = UnityEngine.Random.Range(minGlowDuration, maxGlowDuration);
+        _glowStartTime = UnityEngine.Random.Range(0, maxRoundTime - _glowDuration);
     }
 
     public bool IsGlowing()
@@ -74,17 +77,21 @@ public class BackBoardController : MonoBehaviour
     {
         if (collision.gameObject.CompareTag("Ball"))
         {
-            if (IsGlowing() && CheckIfBallDidNotTouchHoop(collision) && collision.transform.position.y > HoopController.Instance.hoopCenter.position.y)
+            if (IsGlowing() && CheckIfBallDidNotTouchHoop(collision) &&
+                collision.transform.position.y > HoopController.Instance.hoopCenter.position.y)
             {
                 backBoardOuterGlow.SetActive(true);
                 StartCoroutine(StopOuterGlowAfterHalfASecond());
             }
         }
     }
+
     static bool CheckIfBallDidNotTouchHoop(Collision collision)
     {
-        return !collision.gameObject.GetComponent<BallController>().GetTouchedGameObjects().Contains(HoopController.Instance.gameObject);
+        return !collision.gameObject.GetComponent<BallController>().GetTouchedGameObjects()
+            .Contains(HoopController.Instance.gameObject);
     }
+
     IEnumerator StopOuterGlowAfterHalfASecond()
     {
         yield return new WaitForSeconds(0.5f);
@@ -92,5 +99,10 @@ public class BackBoardController : MonoBehaviour
         {
             backBoardOuterGlow.SetActive(false);
         }
+    }
+
+    public void PlaySparksEffect()
+    {
+        sparks.Play();
     }
 }

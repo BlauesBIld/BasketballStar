@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -23,10 +24,17 @@ public class UIManager : MonoBehaviour
     {
         StartMenuController.Instance.OpenStartMenu();
         EndOfRoundScreenController.Instance.CloseEndOfRoundScreen();
+        AISelectionScreenController.Instance.CloseAISelectionScreen();
     }
 
     public float GetMaxScreenHeight()
     {
         return Screen.currentResolution.height;
+    }
+
+    public void OpenAISelectionMenu()
+    {
+        StartMenuController.Instance.gameObject.SetActive(false);
+        AISelectionScreenController.Instance.gameObject.SetActive(true);
     }
 }

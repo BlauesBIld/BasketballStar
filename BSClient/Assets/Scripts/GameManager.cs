@@ -3,12 +3,13 @@ using System.Collections;
 using System.Collections.Generic;
 using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 public class GameManager : MonoBehaviour
 {
     public static GameManager Instance { get; private set; }
 
-    public GameObject opponentPrefab;
+    public AIDifficultiesConfigSO aiDifficultiesConfigSo;
 
     private void Awake()
     {
@@ -38,15 +39,15 @@ public class GameManager : MonoBehaviour
     public void StartSoloGame()
     {
         StartMenuController.Instance.CloseStartMenu();
-        RoundManager.Instance.StartRound();
+        RoundManager.Instance.CreateRound();
     }
 
-    public void StartRoundAgainstAI()
+    public void StartRoundAgainstAI(int aiDifficulty)
     {
         StartMenuController.Instance.CloseStartMenu();
-        OpponentController opponent = Instantiate(opponentPrefab).GetComponentInChildren<OpponentController>();
-        RoundManager.Instance.AddAIOpponent(opponent);
-        RoundManager.Instance.StartRound();
+        AISelectionScreenController.Instance.CloseAISelectionScreen();
+        RoundManager.Instance.AddAIOpponent(aiDifficulty);
+        RoundManager.Instance.CreateRound();
     }
 
     public void ExitToMainMenu()
