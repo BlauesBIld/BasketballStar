@@ -92,18 +92,11 @@ public class IngameUIController : MonoBehaviour
         float perfectBackboardShotHeight =
             (upperPerfectBackboardShotPowerInPercent - lowerPerfectBackboardShotPowerInPercent) * maxHeight;
 
-        Vector3 perfectShotIndicatorPosition = perfectShotPowerIndicator.position;
-        perfectShotPowerIndicator.position =
-            new Vector3(perfectShotIndicatorPosition.x, rt.transform.position.y + perfectShotYPosition,
-                perfectShotIndicatorPosition.z);
+        perfectShotPowerIndicator.localPosition = new Vector3(0, perfectShotYPosition, 0);
         perfectShotPowerIndicator.sizeDelta =
             new Vector2(perfectShotPowerIndicator.sizeDelta.x, perfectShotHeight);
 
-        Vector3 perfectBackboardShotIndicatorPosition = perfectBackboardShotPowerIndicator.position;
-        perfectBackboardShotPowerIndicator.position =
-            new Vector3(perfectBackboardShotIndicatorPosition.x,
-                rt.transform.position.y + perfectBackboardShotYPosition,
-                perfectBackboardShotIndicatorPosition.z);
+        perfectBackboardShotPowerIndicator.localPosition = new Vector3(0, perfectBackboardShotYPosition, 0);
         perfectBackboardShotPowerIndicator.sizeDelta =
             new Vector2(perfectShotPowerIndicator.sizeDelta.x, perfectBackboardShotHeight);
     }

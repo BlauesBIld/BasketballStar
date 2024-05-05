@@ -94,7 +94,7 @@ GameObject:
   - component: {fileID: 6912217928538609691}
   - component: {fileID: 8322064371579923117}
   - component: {fileID: 5746733790112001454}
-  m_Layer: 7
+  m_Layer: 0
   m_Name: BoardOuterGlow
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -177,7 +177,7 @@ GameObject:
   - component: {fileID: 6568848507267950845}
   - component: {fileID: 2304248156169165438}
   - component: {fileID: 2751053441528700662}
-  m_Layer: 7
+  m_Layer: 0
   m_Name: BoardGlow
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -403,7 +403,7 @@ GameObject:
   - component: {fileID: 6117147570469475582}
   - component: {fileID: 5615467725745895218}
   - component: {fileID: 8617655949722462084}
-  m_Layer: 7
+  m_Layer: 0
   m_Name: BackBoardBonusText
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1001,7 +1001,7 @@ GameObject:
   - component: {fileID: 1125069890310508638}
   - component: {fileID: 4612276821622135463}
   - component: {fileID: 8150442963857255980}
-  m_Layer: 6
+  m_Layer: 0
   m_Name: Sparks
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -5948,10 +5948,20 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 4931664941310113512}
     m_Modifications:
+    - target: {fileID: 1609610279133112723, guid: 6d70121238fbd0944ae9696715ce8b69,
+        type: 3}
+      propertyPath: m_Layer
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 4703457624706750389, guid: 6d70121238fbd0944ae9696715ce8b69,
         type: 3}
       propertyPath: m_Name
       value: ExplosionEffects
+      objectReference: {fileID: 0}
+    - target: {fileID: 4703457624706750389, guid: 6d70121238fbd0944ae9696715ce8b69,
+        type: 3}
+      propertyPath: m_Layer
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4721410298829550679, guid: 6d70121238fbd0944ae9696715ce8b69,
         type: 3}
@@ -6006,6 +6016,11 @@ PrefabInstance:
     - target: {fileID: 4721410298829550679, guid: 6d70121238fbd0944ae9696715ce8b69,
         type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8063194043238165923, guid: 6d70121238fbd0944ae9696715ce8b69,
+        type: 3}
+      propertyPath: m_Layer
       value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []

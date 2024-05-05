@@ -1,3 +1,4 @@
+using System.Linq;
 using UnityEngine;
 
 public class PlayerBallScoreController : MonoBehaviour
@@ -7,7 +8,6 @@ public class PlayerBallScoreController : MonoBehaviour
         if (other.CompareTag("HoopScoreCollider"))
         {
             BallController playerBall = GetComponentInParent<BallController>();
-            Debug.Log("Touched game objects: " + playerBall.GetTouchedGameObjects().Count);
             if (playerBall.GetTouchedGameObjects().Count == 0)
             {
                 RoundManager.Instance.AddPointsToPlayerAndSpawnDisappearingText(3);

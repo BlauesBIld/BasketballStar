@@ -63,7 +63,6 @@ public class RoundManager : MonoBehaviour
         ResetVariableValues();
         AssignPlayerToRandomPosition();
         RoundCreatedEvent?.Invoke();
-        Debug.Log("Round created");
         PlayerScoreChangedEvent?.Invoke(0);
     }
 
@@ -71,7 +70,6 @@ public class RoundManager : MonoBehaviour
     {
         StartCoroutine(EndGameAfterTime());
         RoundStartedEvent?.Invoke();
-        Debug.Log("Round started");
     }
 
     void ResetVariableValues()
@@ -293,8 +291,10 @@ public class RoundManager : MonoBehaviour
 
     public Vector3 GetRandomPositionOnField()
     {
+        float minDistanceOnXFromCenter = 7f;
+        float maxDistanceOnXFromCenter = 5f + _maxPossibleDistanceFromCenterOfPlayField;
         return new Vector3(
-            Random.Range(5, 5f + _maxPossibleDistanceFromCenterOfPlayField),
+            Random.Range(minDistanceOnXFromCenter, maxDistanceOnXFromCenter),
             0,
             Random.Range(-_maxPossibleDistanceFromCenterOfPlayField, _maxPossibleDistanceFromCenterOfPlayField));
     }

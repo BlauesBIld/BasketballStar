@@ -40,10 +40,7 @@ public class HoopController : MonoBehaviour
     void AdjustHoopCenterWithRadiusOnYAxis()
     {
         Vector3 hoopCenterPosition = hoopCenter.position;
-        Debug.Log("Hoop center position before: " + hoopCenterPosition);
         hoopCenterPosition.y += ballController.GetBallRadius() / 2;
-        Debug.Log("Ball radius: " + ballController.GetBallRadius() / 2);
-        Debug.Log("Hoop center position adjusted to: " + hoopCenterPosition);
         hoopCenter.position = hoopCenterPosition;
     }
 
