@@ -328,7 +328,6 @@ public class PlayerController : MonoBehaviour
 
     public float GetMaxSwipeDistance()
     {
-        Debug.Log(UIManager.Instance.GetMaxScreenHeight());
         return UIManager.Instance.GetMaxScreenHeight() / 2;
     }
 }
