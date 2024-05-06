@@ -79,6 +79,7 @@ public class IngameUIController : MonoBehaviour
     public void HideIngameUIAndReset()
     {
         fireBallBar.GetComponent<Slider>().value = 0;
+        timerText.text = RoundManager.Instance.GetRoundDuration().ToString();
         DeleteEveryOpponentUIScoreBlock();
         DeleteAllDisappearingTextsIfAnyExist();
 

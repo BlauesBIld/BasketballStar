@@ -82,4 +82,12 @@ public class Utils
         float jumpHeight = initialVelocity * initialVelocity / (2 * gravity);
         return jumpHeight;
     }
+
+    public static Vector3 CalculateHorizontalDirectionFromTo(Vector3 fromPosition, Vector3 toPosition)
+    {
+        fromPosition.y = 0;
+        toPosition.y = 0;
+
+        return (toPosition - fromPosition).normalized;
+    }
 }

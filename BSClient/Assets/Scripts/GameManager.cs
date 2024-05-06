@@ -10,6 +10,8 @@ public class GameManager : MonoBehaviour
     public static GameManager Instance { get; private set; }
 
     public AIDifficultiesConfigSO aiDifficultiesConfigSo;
+    public float PlayerJumpForce { get; } = 3f;
+    public float ShotFlyingTime { get; } = 2f;
 
     private void Awake()
     {

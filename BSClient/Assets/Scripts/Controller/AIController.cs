@@ -6,25 +6,29 @@ using Random = UnityEngine.Random;
 
 public class AIController : MonoBehaviour
 {
-    public Transform positionAboveHead;
-
-    private float _jumpForce = 3f;
     public float ShotFlyingTime { get; } = 2f;
 
-    public float optimalPerfectShotThrowPower;
-    public float optimalPerfectShotAngleRad;
-    public float optimalBackBoardShotThrowPower;
-    public float optimalBackBoardShotAngleRad;
+    private float _optimalPerfectShotThrowPower;
+    private float _optimalPerfectShotAngleRad;
+    private float _optimalBackBoardShotThrowPower;
+    private float _optimalBackBoardShotAngleRad;
 
     private float _maxDelayBeforeThrow = 1.5f;
     private float _minDelayBeforeThrow = 0.5f;
 
     private float _maxErrorPower = 0.1f;
 
+    private float _chanceOfThrowingBackBoardShot = 0.25f;
+
     private void Awake()
     {
         RoundManager.Instance.RoundCreatedEvent += ResetShot;
         RoundManager.Instance.RoundStartedEvent += StartShooting;
+    }
+
+    private void Start()
+    {
+        GetComponent<OpponentController>().ThrowEndedEvent += ResetShotAndStartShootingWithRandomDelayAgain;
     }
 
     private void StartShooting()
@@ -35,57 +39,51 @@ public class AIController : MonoBehaviour
     private IEnumerator ShootWithRandomDelay()
     {
         yield return new WaitForSeconds(Random.Range(_minDelayBeforeThrow, _maxDelayBeforeThrow));
+
+        if (BackBoardController.Instance.IsGlowing()) _chanceOfThrowingBackBoardShot = 0.6f;
+        DecidedIfBackBoardShotAndSetValuesOnOpponentController();
+
+
         if (RoundManager.Instance.IsRoundActive())
         {
-            GetComponent<OpponentController>().ballController.StartCharging();
-            StartCoroutine(StopChargingAndCallJumpThrowAfterOneSecond());
+            GetComponent<OpponentController>().StartShooting();
         }
     }
 
-    private IEnumerator StopChargingAndCallJumpThrowAfterOneSecond()
+    private void DecidedIfBackBoardShotAndSetValuesOnOpponentController()
     {
-        yield return new WaitForSeconds(1f);
-        JumpThrow();
+        Vector3 towardsDesiredHoop;
+        float throwPower;
+        Vector3 throwVector;
+
+        if (Random.value < _chanceOfThrowingBackBoardShot)
+        {
+            towardsDesiredHoop = Utils.CalculateHorizontalDirectionFromTo(transform.position,
+                HoopController.Instance.backBoardHoopCenter.position);
+            throwPower = _optimalBackBoardShotThrowPower + Random.Range(-_maxErrorPower, _maxErrorPower);
+            throwVector = towardsDesiredHoop * Mathf.Cos(_optimalBackBoardShotAngleRad) +
+                          transform.up * Mathf.Sin(_optimalBackBoardShotAngleRad);
+
+            Debug.Log("Backboard shot");
+        }
+        else
+        {
+            towardsDesiredHoop = Utils.CalculateHorizontalDirectionFromTo(transform.position,
+                HoopController.Instance.hoopCenter.position);
+            throwPower = _optimalPerfectShotThrowPower + Random.Range(-_maxErrorPower, _maxErrorPower);
+            throwVector = towardsDesiredHoop * Mathf.Cos(_optimalPerfectShotAngleRad) +
+                          transform.up * Mathf.Sin(_optimalPerfectShotAngleRad);
+
+            Debug.Log("Perfect shot");
+        }
+
+        GetComponent<OpponentController>().SetThrowValues(throwPower, throwVector);
     }
 
-    private void JumpThrow()
+    public void ResetShotAndStartShootingWithRandomDelayAgain()
     {
-        Jump();
-        StartCoroutine(ThrowWhenVelocityGetsNegative());
-    }
-
-    private IEnumerator ThrowWhenVelocityGetsNegative()
-    {
-        while (GetComponent<Rigidbody>().velocity.y >= 0) yield return null;
-
-        ThrowBall();
-        StartCoroutine(ResetShotAfterShootTime());
-    }
-
-    private void ThrowBall()
-    {
-        float throwPower = optimalPerfectShotThrowPower + Random.Range(-_maxErrorPower, _maxErrorPower);
-        Vector3 hoopPosition = HoopController.Instance.hoopCenter.position;
-        hoopPosition.y = 0;
-        Vector3 opponentPosition = transform.position;
-        opponentPosition.y = 0;
-
-        Vector3 towardsDesiredHoop = (hoopPosition - opponentPosition).normalized;
-        Vector3 throwVector = towardsDesiredHoop * Mathf.Cos(optimalPerfectShotAngleRad) +
-                              transform.up * Mathf.Sin(optimalPerfectShotAngleRad);
-        GetComponent<OpponentController>().ballController.Throw(throwVector * throwPower);
-    }
-
-    public IEnumerator ResetShotAfterShootTime()
-    {
-        yield return new WaitForSeconds(ShotFlyingTime);
         ResetShot();
         StartCoroutine(ShootWithRandomDelay());
-    }
-
-    private void Jump()
-    {
-        GetComponent<Rigidbody>().AddForce(Vector3.up * _jumpForce, ForceMode.VelocityChange);
     }
 
     public void ResetShot()
@@ -98,22 +96,20 @@ public class AIController : MonoBehaviour
     private void SetRandomPositionOnField()
     {
         Vector3 randomPosition = RoundManager.Instance.GetRandomPositionOnField();
-        transform.position = randomPosition;
-        Vector3 hoopPosition = HoopController.Instance.hoopCenter.position;
-        hoopPosition.y = transform.position.y;
-        transform.LookAt(hoopPosition);
+        GetComponent<OpponentController>().SetPosition(randomPosition);
     }
 
     private void CalculateAndSetOptimalThrowValues()
     {
-        Vector3 ballThrowPosition = positionAboveHead.position;
-        ballThrowPosition.y += Utils.CalculateJumpHeight(_jumpForce);
+        Vector3 ballThrowPosition = GetComponent<OpponentController>().positionAboveHead.position;
+        ballThrowPosition.y += Utils.CalculateJumpHeight(GameManager.Instance.PlayerJumpForce);
 
-        optimalPerfectShotAngleRad = Utils.CalculateOptimalThrowAngleRad(ballThrowPosition);
-        optimalPerfectShotThrowPower = Utils.CalculateOptimalThrowPower(ballThrowPosition, optimalPerfectShotAngleRad);
-        optimalBackBoardShotAngleRad = Utils.CalculateOptimalBackBoardThrowAngleRad(ballThrowPosition);
-        optimalBackBoardShotThrowPower =
-            Utils.CalculateOptimalBackBoardThrowPower(ballThrowPosition, optimalBackBoardShotAngleRad);
+        _optimalPerfectShotAngleRad = Utils.CalculateOptimalThrowAngleRad(ballThrowPosition);
+        _optimalPerfectShotThrowPower =
+            Utils.CalculateOptimalThrowPower(ballThrowPosition, _optimalPerfectShotAngleRad);
+        _optimalBackBoardShotAngleRad = Utils.CalculateOptimalBackBoardThrowAngleRad(ballThrowPosition);
+        _optimalBackBoardShotThrowPower =
+            Utils.CalculateOptimalBackBoardThrowPower(ballThrowPosition, _optimalBackBoardShotAngleRad);
     }
 
     private void OnDestroy()

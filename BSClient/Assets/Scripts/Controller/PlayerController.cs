@@ -13,7 +13,6 @@ public class PlayerController : MonoBehaviour
 
     public float PerfectShotThreshold { get; } = 0.08f;
     public float PerfectBackBoardShotThreshold { get; } = 0.05f;
-    public float ShotFlyingTime { get; } = 2f;
 
     private float _lowestThrowPowerThreshold;
     private float _highestPerfectThrowPowerThreshold;
@@ -22,7 +21,6 @@ public class PlayerController : MonoBehaviour
     public BallController ballController;
     public Transform positionAboveHead;
 
-    private readonly float _jumpForce = 3f;
     private float _currentSwipeDistance;
     private float? _firstSwipeDirection;
     private float _initialTouchPosition = -1;
@@ -66,41 +64,54 @@ public class PlayerController : MonoBehaviour
 
     private void HandleSwipeUp()
     {
-        if (!RoundManager.Instance.HasRoundEnded() && RoundManager.Instance.HasRoundStarted() && Input.touchCount > 0)
+        if (RoundManager.Instance.IsRoundOnGoing() && Input.touchCount > 0)
         {
-            if (_isChargingThrow)
+            if (_isChargingThrow && CheckIfPlayerIsStartingToSwipeOrIsAlreadySwipingUp())
             {
-                if ((RoundManager.Instance.IsRoundActive() && _firstSwipeDirection == null) || _firstSwipeDirection > 0)
-                {
-                    if (Input.GetTouch(0).phase == TouchPhase.Began)
-                    {
-                        _initialTouchPosition = Input.GetTouch(0).position.y;
-                    }
-                    else if (Input.GetTouch(0).phase == TouchPhase.Moved && _initialTouchPosition > 0f)
-                    {
-                        float swipeDistance = Input.GetTouch(0).position.y - _initialTouchPosition;
-                        if (swipeDistance > 0)
-                        {
-                            if (_firstSwipeDirection == null)
-                            {
-                                _firstSwipeDirection = swipeDistance;
-                                ballController.StartCharging();
-                                StartCoroutine(StopChargingAndCallJumpThrowAfterOneSecond());
-                            }
-                        }
-                        else if (swipeDistance < 0)
-                        {
-                            if (_firstSwipeDirection == null) _firstSwipeDirection = swipeDistance;
-                        }
-
-                        _currentSwipeDistance = Mathf.Max(swipeDistance, 0f);
-                        CurrentSwipeDistanceChangedEvent?.Invoke(_currentSwipeDistance);
-                    }
-                }
+                HandleTouchInput();
             }
 
-            if (Input.GetTouch(0).phase == TouchPhase.Ended) _firstSwipeDirection = null;
+            ResetFirstSwipeDirectionIfSwipeEnded();
         }
+    }
+
+    private void ResetFirstSwipeDirectionIfSwipeEnded()
+    {
+        if (Input.GetTouch(0).phase == TouchPhase.Ended) _firstSwipeDirection = null;
+    }
+
+    private void HandleTouchInput()
+    {
+        if (Input.GetTouch(0).phase == TouchPhase.Began)
+        {
+            _initialTouchPosition = Input.GetTouch(0).position.y;
+        }
+        else if (Input.GetTouch(0).phase == TouchPhase.Moved && _initialTouchPosition > 0f)
+        {
+            float swipeDistance = Input.GetTouch(0).position.y - _initialTouchPosition;
+            if (swipeDistance > 0)
+            {
+                if (_firstSwipeDirection == null)
+                {
+                    _firstSwipeDirection = swipeDistance;
+                    ballController.StartCharging();
+                    StartCoroutine(StopChargingAndCallJumpThrowAfterOneSecond());
+                }
+            }
+            else if (swipeDistance < 0)
+            {
+                if (_firstSwipeDirection == null) _firstSwipeDirection = swipeDistance;
+            }
+
+            _currentSwipeDistance = Mathf.Max(swipeDistance, 0f);
+            CurrentSwipeDistanceChangedEvent?.Invoke(_currentSwipeDistance);
+        }
+    }
+
+    private bool CheckIfPlayerIsStartingToSwipeOrIsAlreadySwipingUp()
+    {
+        return ((RoundManager.Instance.IsRoundActive() && _firstSwipeDirection == null) ||
+                _firstSwipeDirection > 0);
     }
 
     private IEnumerator StopChargingAndCallJumpThrowAfterOneSecond()
@@ -127,7 +138,7 @@ public class PlayerController : MonoBehaviour
 
     public IEnumerator ResetShotAfterShootTime()
     {
-        yield return new WaitForSeconds(ShotFlyingTime);
+        yield return new WaitForSeconds(GameManager.Instance.ShotFlyingTime);
         ResetShot();
     }
 
@@ -153,16 +164,9 @@ public class PlayerController : MonoBehaviour
         ThresholdsChangedEvent?.Invoke();
     }
 
-    private float GetHorizontalDistanceFromCenterToHoop()
-    {
-        Vector3 hoopPosition = HoopController.Instance.hoopCenter.position;
-        return new Vector3(hoopPosition.x, 0, hoopPosition.z)
-            .magnitude;
-    }
-
     private void Jump()
     {
-        _rigidbody.AddForce(Vector3.up * _jumpForce, ForceMode.VelocityChange);
+        _rigidbody.AddForce(Vector3.up * GameManager.Instance.PlayerJumpForce, ForceMode.VelocityChange);
     }
 
     private void ThrowBall()
@@ -175,7 +179,7 @@ public class PlayerController : MonoBehaviour
 
     private Vector3 CheckForThresholdsAndCalculateForceVector(float throwPower)
     {
-        float optimalShotAngleRad = 0f;
+        float optimalShotAngleRad;
         Vector3 hoopCenterPosition = HoopController.Instance.hoopCenter.position;
         hoopCenterPosition.y = 0;
         Vector3 backBoardHoopCenterPosition = HoopController.Instance.backBoardHoopCenter.position;
@@ -183,7 +187,7 @@ public class PlayerController : MonoBehaviour
         Vector3 playerPosition = transform.position;
         playerPosition.y = 0;
 
-        Vector3 towardsDesiredHoop = Vector3.zero;
+        Vector3 towardsDesiredHoop;
 
         if (throwPower <= GetHighestPerfectThrowPower())
         {
@@ -234,7 +238,7 @@ public class PlayerController : MonoBehaviour
     private void CalculateAndSetOptimalThrowValues()
     {
         Vector3 ballThrowPosition = positionAboveHead.position;
-        ballThrowPosition.y += Utils.CalculateJumpHeight(_jumpForce);
+        ballThrowPosition.y += Utils.CalculateJumpHeight(GameManager.Instance.PlayerJumpForce);
 
         optimalPerfectShotAngleRad = Utils.CalculateOptimalThrowAngleRad(ballThrowPosition);
         optimalPerfectShotThrowPower = Utils.CalculateOptimalThrowPower(ballThrowPosition, optimalPerfectShotAngleRad);
@@ -249,22 +253,6 @@ public class PlayerController : MonoBehaviour
         Vector3 lookAtPosition = new Vector3(hoopCenterPosition.x, transform.position.y,
             hoopCenterPosition.z);
         transform.LookAt(lookAtPosition);
-    }
-
-    public float GetHorizontalDistanceFromHoop()
-    {
-        Vector3 hoopCenterPosition = HoopController.Instance.hoopCenter.position;
-        Vector3 throwPosition = positionAboveHead.position;
-        return Vector3.Distance(new Vector3(throwPosition.x, 0, throwPosition.z),
-            new Vector3(hoopCenterPosition.x, 0, hoopCenterPosition.z));
-    }
-
-    public float GetHorizontalDistanceFromBackBoardHoop()
-    {
-        Vector3 ballThrowPosition = positionAboveHead.position;
-        Vector3 hoopCenterPosition = HoopController.Instance.backBoardHoopCenter.position;
-        return Vector3.Distance(new Vector3(ballThrowPosition.x, 0, ballThrowPosition.z),
-            new Vector3(hoopCenterPosition.x, 0, hoopCenterPosition.z));
     }
 
     public float GetSlideDistance()

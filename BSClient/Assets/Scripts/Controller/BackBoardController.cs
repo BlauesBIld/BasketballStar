@@ -60,7 +60,7 @@ public class BackBoardController : MonoBehaviour
 
     public void SetRandomGlowTime()
     {
-        float maxRoundTime = RoundManager.Instance.GetRoundTime();
+        float maxRoundTime = RoundManager.Instance.GetRoundDuration();
         float maxGlowDuration = maxRoundTime / 2;
         float minGlowDuration = maxRoundTime / 4;
 

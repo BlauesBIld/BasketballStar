@@ -13,7 +13,7 @@ public class RoundManager : MonoBehaviour
 
     private readonly float _maxPossibleDistanceFromCenterOfPlayField = 5f;
 
-    private float _roundTime = 15f;
+    private float _roundDuration = 15f;
     private bool _hasRoundEnded = true;
 
     private int _playerScore;
@@ -90,7 +90,7 @@ public class RoundManager : MonoBehaviour
     private IEnumerator EndGameAfterTime()
     {
         _roundStartTimeStamp = Time.time;
-        while (Time.time - _roundStartTimeStamp < _roundTime)
+        while (Time.time - _roundStartTimeStamp < _roundDuration)
             yield return null;
 
         while (!PlayerController.Instance.ballController.IsDribbling() || !CheckIfOpponentsBallsAreDribbling())
@@ -130,6 +130,11 @@ public class RoundManager : MonoBehaviour
 
     private void SetOpponentsCardValues()
     {
+        if (_opponentsAndScores.Count > 0)
+            EndOfRoundScreenController.Instance.playersPanel.SetActive(true);
+        else
+            EndOfRoundScreenController.Instance.playersPanel.SetActive(false);
+
         foreach (OpponentController opponent in _opponentsAndScores.Keys)
         {
             EndOfRoundScreenController.Instance.InstantiateOpponentCard(opponent.name, _opponentsAndScores[opponent]);
@@ -245,7 +250,7 @@ public class RoundManager : MonoBehaviour
 
     public int GetTimeLeft()
     {
-        return (int) (_roundTime - (Time.time - _roundStartTimeStamp));
+        return (int) (_roundDuration - (Time.time - _roundStartTimeStamp));
     }
 
     public Dictionary<OpponentController, int> GetOpponents()
@@ -255,7 +260,7 @@ public class RoundManager : MonoBehaviour
 
     public bool IsRoundActive()
     {
-        return Time.time - _roundStartTimeStamp < _roundTime;
+        return Time.time - _roundStartTimeStamp < _roundDuration;
     }
 
     public Vector3 GetCenterOfPlayField()
@@ -265,14 +270,14 @@ public class RoundManager : MonoBehaviour
         return hoopPosition / 2;
     }
 
-    public float GetRoundTime()
+    public float GetRoundDuration()
     {
-        return _roundTime;
+        return _roundDuration;
     }
 
-    public float SetRoundTime(float time)
+    public float SetRoundDuration(float time)
     {
-        return _roundTime = time;
+        return _roundDuration = time;
     }
 
     public void AddPointsToOpponent(OpponentController opponent, int points)
@@ -305,6 +310,16 @@ public class RoundManager : MonoBehaviour
         return _hasRoundEnded;
     }
 
+    public bool HasRoundStarted()
+    {
+        return _roundStartTimeStamp != 0;
+    }
+
+    public bool IsRoundOnGoing()
+    {
+        return HasRoundStarted() && !HasRoundEnded();
+    }
+
     public int GetPlayerScore()
     {
         return _playerScore;
@@ -319,10 +334,5 @@ public class RoundManager : MonoBehaviour
     {
         _fireBallBonusActive = false;
         consecutiveGoals = 0;
-    }
-
-    public bool HasRoundStarted()
-    {
-        return _roundStartTimeStamp != 0;
     }
 }

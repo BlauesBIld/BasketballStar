@@ -97,7 +97,7 @@ public class CameraController : MonoBehaviour
         targetPosition.y += 1f;
         yield return StartCoroutine(MoveToPosition(targetUpPosition, timeForThrow * 0.7f));
 
-        float timeDifference = PlayerController.Instance.ShotFlyingTime - timeForThrow * 0.7f;
+        float timeDifference = GameManager.Instance.ShotFlyingTime - timeForThrow * 0.7f;
         targetPosition.y += 1f;
         yield return StartCoroutine(MoveToPosition(targetPosition, timeDifference));
 

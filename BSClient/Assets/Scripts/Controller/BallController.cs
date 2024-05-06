@@ -22,16 +22,14 @@ public class BallController : MonoBehaviour
     private BallStates _ballState = BallStates.Dribbling;
     private float _lastBallYVelocity;
 
-    private Rigidbody _rigidbody;
-
     private HashSet<GameObject> _touchedGameObjects = new HashSet<GameObject>();
 
     public void Reset()
     {
         _ballState = BallStates.Dribbling;
-        _rigidbody = GetComponent<Rigidbody>();
-        _rigidbody.velocity = Vector3.zero;
-        _rigidbody.angularVelocity = Vector3.zero;
+        Rigidbody ballRigidbody = GetComponent<Rigidbody>();
+        ballRigidbody.velocity = Vector3.zero;
+        ballRigidbody.angularVelocity = Vector3.zero;
         transform.rotation = Quaternion.identity;
         SetPositionNextToOwner();
         ClearTouchedGameObjects();
@@ -39,7 +37,6 @@ public class BallController : MonoBehaviour
 
     private void Start()
     {
-        _rigidbody = GetComponent<Rigidbody>();
         SetPositionNextToOwner();
     }
 
@@ -89,13 +86,14 @@ public class BallController : MonoBehaviour
 
     private void HandleIdleBouncing()
     {
-        if (_lastBallYVelocity < 0 && _rigidbody.velocity.y >= 0)
+        Rigidbody ballRigidbody = GetComponent<Rigidbody>();
+        if (_lastBallYVelocity < 0 && ballRigidbody.velocity.y >= 0)
         {
-            _rigidbody.velocity = new Vector3(_rigidbody.velocity.x, 0, _rigidbody.velocity.z);
-            _rigidbody.AddForce(Vector3.up * _idleBounceForce, ForceMode.Impulse);
+            ballRigidbody.velocity = new Vector3(ballRigidbody.velocity.x, 0, ballRigidbody.velocity.z);
+            ballRigidbody.AddForce(Vector3.up * _idleBounceForce, ForceMode.Impulse);
         }
 
-        _lastBallYVelocity = _rigidbody.velocity.y;
+        _lastBallYVelocity = ballRigidbody.velocity.y;
     }
 
     public void StartCharging()
@@ -106,35 +104,39 @@ public class BallController : MonoBehaviour
 
     private void MoveBallAboveOwnerInOneSecond()
     {
-        _rigidbody.isKinematic = true;
+        GetComponent<Rigidbody>().isKinematic = true;
         StartCoroutine(MoveBallAboveOwner());
     }
 
     private IEnumerator MoveBallAboveOwner()
     {
-        float time = 0f;
-        float duration = 1f;
-        Vector3 targetPosition = positionAboveOwnerHead.position;
+        Vector3 startPosition = transform.position;
+        Vector3 endPosition = positionAboveOwnerHead.position;
+        float time = 0;
+        float duration = 0.4f;
+
         while (time < duration)
         {
+            transform.position = Vector3.Lerp(startPosition, endPosition, time / duration);
             time += Time.deltaTime;
-            transform.position =
-                Vector3.Lerp(transform.position, targetPosition, time / duration);
             yield return null;
         }
+
+        transform.position = endPosition;
     }
 
     public void Throw(Vector3 forceVector)
     {
-        _rigidbody.isKinematic = false;
+        Rigidbody ballRigidbody = GetComponent<Rigidbody>();
+        ballRigidbody.isKinematic = false;
         _ballState = BallStates.Flying;
 
-        _rigidbody.AddForce(forceVector, ForceMode.Impulse);
+        ballRigidbody.AddForce(forceVector, ForceMode.Impulse);
 
         float torqueForce = forceVector.magnitude;
         Vector3 torqueDirection = -owner.transform.right;
 
-        _rigidbody.AddTorque(torqueDirection * torqueForce, ForceMode.Impulse);
+        ballRigidbody.AddTorque(torqueDirection * torqueForce, ForceMode.Impulse);
     }
 
     public HashSet<GameObject> GetTouchedGameObjects()
