@@ -18,7 +18,7 @@ public class AIController : MonoBehaviour
 
     private float _maxErrorPower = 0.1f;
 
-    private float _chanceOfThrowingBackBoardShot = 0.25f;
+    private float _chanceOfThrowingBackBoardShot = 0.12f;
 
     private void Awake()
     {
@@ -88,6 +88,7 @@ public class AIController : MonoBehaviour
 
     public void ResetShot()
     {
+        _chanceOfThrowingBackBoardShot = 0.12f;
         SetRandomPositionOnField();
         GetComponent<OpponentController>().ballController.Reset();
         CalculateAndSetOptimalThrowValues();
