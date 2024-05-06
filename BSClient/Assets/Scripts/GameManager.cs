@@ -13,6 +13,9 @@ public class GameManager : MonoBehaviour
     public float PlayerJumpForce { get; } = 3f;
     public float ShotFlyingTime { get; } = 2f;
 
+    private readonly int _windowsScreenWidth = 476;
+    private readonly int _windowsScreenHeight = 1000;
+
     private void Awake()
     {
         if (Instance == null)
@@ -31,6 +34,10 @@ public class GameManager : MonoBehaviour
     {
         Application.targetFrameRate = 60;
         QualitySettings.vSyncCount = 0;
+        if (Application.platform == RuntimePlatform.WindowsPlayer)
+        {
+            Screen.SetResolution(_windowsScreenWidth, _windowsScreenHeight, FullScreenMode.Windowed);
+        }
     }
 
     private void IgnorePlayerAndOpponentLayerCollisions()

@@ -36,7 +36,7 @@ public class AISelectionScreenController : MonoBehaviour
 
     public void Update()
     {
-        if (Application.platform == RuntimePlatform.Android && Input.GetKeyDown(KeyCode.Escape))
+        if (Input.GetKeyDown(KeyCode.Escape))
         {
             StartMenuController.Instance.OpenStartMenu();
             CloseAISelectionScreen();

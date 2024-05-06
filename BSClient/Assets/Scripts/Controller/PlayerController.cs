@@ -64,14 +64,59 @@ public class PlayerController : MonoBehaviour
 
     private void HandleSwipeUp()
     {
-        if (RoundManager.Instance.IsRoundOnGoing() && Input.touchCount > 0)
+        if (RoundManager.Instance.IsRoundOnGoing())
         {
-            if (_isChargingThrow && CheckIfPlayerIsStartingToSwipeOrIsAlreadySwipingUp())
+            if (Application.platform == RuntimePlatform.Android && Input.touchCount > 0)
             {
-                HandleTouchInput();
+                if (_isChargingThrow && CheckIfPlayerIsStartingToSwipeOrIsAlreadySwipingUp())
+                {
+                    HandleTouchInput();
+                }
+
+                ResetFirstSwipeDirectionIfSwipeEnded();
+            }
+            else
+            {
+                if (_isChargingThrow && CheckIfPlayerIsStartingToSwipeOrIsAlreadySwipingUp())
+                {
+                    HandleMouseInput();
+                }
+
+                ResetFirstSwipeDirectionIfMouseClickEnded();
+            }
+        }
+    }
+
+    private void ResetFirstSwipeDirectionIfMouseClickEnded()
+    {
+        if (Input.GetMouseButtonUp(0)) _firstSwipeDirection = null;
+    }
+
+    private void HandleMouseInput()
+    {
+        if (Input.GetMouseButtonDown(0))
+        {
+            _initialTouchPosition = Input.mousePosition.y;
+        }
+        else if (Input.GetMouseButton(0) && _initialTouchPosition > 0f)
+        {
+            float swipeDistance = Input.mousePosition.y - _initialTouchPosition;
+            if (swipeDistance > 0)
+            {
+                if (_firstSwipeDirection == null)
+                {
+                    _firstSwipeDirection = swipeDistance;
+                    ballController.StartCharging();
+                    StartCoroutine(StopChargingAndCallJumpThrowAfterOneSecond());
+                }
+            }
+            else if (swipeDistance < 0)
+            {
+                if (_firstSwipeDirection == null) _firstSwipeDirection = swipeDistance;
             }
 
-            ResetFirstSwipeDirectionIfSwipeEnded();
+            _currentSwipeDistance = Mathf.Max(swipeDistance, 0f);
+            CurrentSwipeDistanceChangedEvent?.Invoke(_currentSwipeDistance);
         }
     }
 
@@ -283,6 +328,7 @@ public class PlayerController : MonoBehaviour
 
     public float GetMaxSwipeDistance()
     {
+        Debug.Log(UIManager.Instance.GetMaxScreenHeight());
         return UIManager.Instance.GetMaxScreenHeight() / 2;
     }
 }

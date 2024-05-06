@@ -42,10 +42,10 @@ public class ThrowSwipeDistanceBarController : MonoBehaviour
         RectTransform rt = GetComponent<RectTransform>();
         float maxHeight = rt.rect.height;
 
-        float perfectShotYPosition = lowerPerfectShotPowerInPercent * maxHeight;
+        float perfectShotYPosition = lowerPerfectShotPowerInPercent * maxHeight - maxHeight / 2;
         float perfectShotHeight = (upperPerfectShotPowerInPercent - lowerPerfectShotPowerInPercent) * maxHeight;
 
-        float perfectBackboardShotYPosition = lowerPerfectBackboardShotPowerInPercent * maxHeight;
+        float perfectBackboardShotYPosition = lowerPerfectBackboardShotPowerInPercent * maxHeight - maxHeight / 2;
         float perfectBackboardShotHeight =
             (upperPerfectBackboardShotPowerInPercent - lowerPerfectBackboardShotPowerInPercent) * maxHeight;
 

@@ -22,7 +22,7 @@ public class StartMenuController : MonoBehaviour
 
     private void Update()
     {
-        if (Application.platform == RuntimePlatform.Android && Input.GetKeyDown(KeyCode.Escape))
+        if (Input.GetKeyDown(KeyCode.Escape))
         {
             Application.Quit();
         }

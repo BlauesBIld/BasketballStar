@@ -18,7 +18,7 @@ public class BallController : MonoBehaviour
 
     public PhysicMaterial defaultMaterial;
     public PhysicMaterial noBounceMaterial;
-    private readonly float _idleBounceForce = 3f;
+    private readonly float _idleBounceForce = 4f;
     private BallStates _ballState = BallStates.Dribbling;
     private float _lastBallYVelocity;
 
@@ -76,6 +76,7 @@ public class BallController : MonoBehaviour
     {
         Vector3 ballPositionNextToOwner = owner.transform.position + owner.transform.forward * 0.25f +
                                           owner.transform.right * 0.5f;
+        ballPositionNextToOwner.y = owner.transform.position.y + 1f;
         transform.position = ballPositionNextToOwner;
     }
 

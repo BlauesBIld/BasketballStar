@@ -13,7 +13,7 @@ public class RoundManager : MonoBehaviour
 
     private readonly float _maxPossibleDistanceFromCenterOfPlayField = 5f;
 
-    private float _roundDuration = 15f;
+    private float _roundDuration = 60f;
     private bool _hasRoundEnded = true;
 
     private int _playerScore;
@@ -120,11 +120,11 @@ public class RoundManager : MonoBehaviour
         if (_opponentsAndScores.Count == 1)
         {
             if (_opponentsAndScores.Values.First() > _playerScore)
-                EndOfRoundScreenController.Instance.ChangeTitleText("You lost!");
+                EndOfRoundScreenController.Instance.ChangeTitleText("You lose!");
             else if (_opponentsAndScores.Values.First() == _playerScore)
                 EndOfRoundScreenController.Instance.ChangeTitleText("Draw!");
             else
-                EndOfRoundScreenController.Instance.ChangeTitleText("You won!");
+                EndOfRoundScreenController.Instance.ChangeTitleText("You win!");
         }
     }
 
